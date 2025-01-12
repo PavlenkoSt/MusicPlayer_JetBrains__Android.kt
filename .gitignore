@@ -10,8 +10,8 @@
 .externalNativeBuild
 .cxx
 local.properties
-/Photo Editor/*/*
-!/Photo Editor/task/src
-!/Photo Editor/task/build.gradle
+/Music Player/*/*
+!/Music Player/task/src
+!/Music Player/task/build.gradle
 course-remote-info.yaml
 course-info.yaml

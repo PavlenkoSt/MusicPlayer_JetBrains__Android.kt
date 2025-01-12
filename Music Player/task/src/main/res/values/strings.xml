@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Music Player</string>
+    <string name="search">SEARCH</string>
+    <string name="play_pause">play/pause</string>
+    <string name="stop">Stop</string>
+    <string name="add_playlist">Add Playlist</string>
+    <string name="load_playlist">Load Playlist</string>
+    <string name="delete_playlist">Delete Playlist</string>
+</resources>

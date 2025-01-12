@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.hyperskill.musicplayer.Stage1UnitTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2025-01-12T22:29:48" hostname="MacBookPro.netis.cc" time="3.511">
+  <properties/>
+  <testcase name="test00_checkMainActivityComponentsExist" classname="org.hyperskill.musicplayer.Stage1UnitTest" time="2.813"/>
+  <testcase name="test01_checkPlayerControllerFragmentComponentsExist" classname="org.hyperskill.musicplayer.Stage1UnitTest" time="0.1"/>
+  <testcase name="test02_checkSearchButtonNoSongsFound" classname="org.hyperskill.musicplayer.Stage1UnitTest" time="0.084"/>
+  <testcase name="test03_checkMenuItemAddPlaylist" classname="org.hyperskill.musicplayer.Stage1UnitTest" time="0.066"/>
+  <testcase name="test04_checkMenuItemLoadPlaylist" classname="org.hyperskill.musicplayer.Stage1UnitTest" time="0.181"/>
+  <testcase name="test05_checkMenuItemDeletePlaylist" classname="org.hyperskill.musicplayer.Stage1UnitTest" time="0.09"/>
+  <testcase name="test06_checkControllerStopButtonBeforeSearch" classname="org.hyperskill.musicplayer.Stage1UnitTest" time="0.049"/>
+  <testcase name="test07_checkControllerSeekBarBeforeSearch" classname="org.hyperskill.musicplayer.Stage1UnitTest" time="0.056"/>
+  <testcase name="test08_checkControllerPlayPauseButtonBeforeSearch" classname="org.hyperskill.musicplayer.Stage1UnitTest" time="0.07"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

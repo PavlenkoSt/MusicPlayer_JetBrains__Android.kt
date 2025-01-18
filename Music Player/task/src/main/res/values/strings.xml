@@ -6,4 +6,7 @@
     <string name="add_playlist">Add Playlist</string>
     <string name="load_playlist">Load Playlist</string>
     <string name="delete_playlist">Delete Playlist</string>
+    <string name="playlist_name">Playlist Name</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">Ok</string>
 </resources>

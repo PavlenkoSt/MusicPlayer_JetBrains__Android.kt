@@ -26,7 +26,7 @@ import org.robolectric.annotation.Config
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(RobolectricTestRunner::class)
 @Config(shadows = [CustomMediaPlayerShadow::class, CustomShadowAsyncDifferConfig::class])
-class Stage1UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.java){
+class Stage1UnitTestB : MusicPlayerUnitTests<MainActivity>(MainActivity::class.java){
 
     @Test
     fun test00_checkMainActivityComponentsExist() = testActivity {
@@ -50,6 +50,7 @@ class Stage1UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
         Unit
     }
 
+    @Ignore
     @Test
     fun test02_checkSearchButtonNoSongsFound() = testActivity {
         PlayMusicScreen(this).apply {

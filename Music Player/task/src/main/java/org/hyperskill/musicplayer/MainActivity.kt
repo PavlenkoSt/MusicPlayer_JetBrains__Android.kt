@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity() {
             currentTrack = TrackModel(track, TrackState.PLAYING)
             return track
         } else {
-            currentTrack = null
+            currentTrack = TrackModel(track, TrackState.PAUSED)
             return null
         }
     }

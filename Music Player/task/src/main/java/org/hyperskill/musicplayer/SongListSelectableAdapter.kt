@@ -12,7 +12,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 class SongListSelectableAdapter(
-    private val dataSet: Array<SongModel>,
+    private val dataSet: List<SongModel>,
 ) : RecyclerView.Adapter<SongListSelectableAdapter.ViewHolder>() {
     var selectedTrackPositions = mutableListOf<Int>()
 

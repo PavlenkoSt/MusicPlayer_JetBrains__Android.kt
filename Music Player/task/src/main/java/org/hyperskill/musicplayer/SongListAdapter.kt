@@ -11,7 +11,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 class SongListAdapter(
-    private val dataSet: Array<SongModel>,
+    private val dataSet: List<SongModel>,
     private val changeCurrentTrack: (position: Int) -> SongModel?,
     private val onLongClickedItem: (position: Int) -> Unit
 ) : RecyclerView.Adapter<SongListAdapter.ViewHolder>() {

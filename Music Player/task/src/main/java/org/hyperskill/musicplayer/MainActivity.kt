@@ -24,9 +24,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fragmentContainerView: FragmentContainerView
     private lateinit var mainSongList: RecyclerView
 
-    lateinit var activityState: MainActivityState
+    var activityState: MainActivityState = MainActivityState.PLAY_MUSIC
 
-    private var currentPlaylist: PlaylistModel? = PlaylistModel("Init", LocalDatastore.songs)
+    private var playlists = mutableListOf<PlaylistModel>()
+    private var currentPlaylist: PlaylistModel? = null
+
     var currentTrack: TrackModel? = null
         set(value) {
             if (value != null && value.state == TrackState.PLAYING) {
@@ -38,7 +40,7 @@ class MainActivity : AppCompatActivity() {
         }
 
     private var songListAdapter: SongListAdapter? = null
-    private var songListSelectableAdapter: SongListSelectableAdapter? = null
+    var songListSelectableAdapter: SongListSelectableAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,8 +66,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun addPlaylist(name: String, songPositions: List<Int>) {
+        val allSongs = playlists.firstOrNull() ?: return
+        val songsToAdd =   allSongs.songs.filterIndexed { idx, _ -> songPositions.contains(idx) }
+
+        playlists.add(PlaylistModel(name, songsToAdd))
+
+        changeActivityState(MainActivityState.PLAY_MUSIC)
+    }
+
     fun changeActivityState(state: MainActivityState) {
-        if (this::activityState.isInitialized && activityState == state) return
         activityState = state
 
         when (state) {
@@ -73,6 +83,11 @@ class MainActivity : AppCompatActivity() {
                 supportFragmentManager.beginTransaction().replace(
                     R.id.mainFragmentContainer, MainPlayerControllerFragment()
                 ).commit()
+
+                if (currentPlaylist == null) {
+                    val allSongs = playlists.find { it.name == "All Songs" }
+                    currentPlaylist = allSongs
+                }
 
                 if (currentPlaylist != null) {
                     songListAdapter = SongListAdapter(
@@ -91,10 +106,12 @@ class MainActivity : AppCompatActivity() {
                     R.id.mainFragmentContainer, MainAddPlaylistFragment()
                 ).commit()
 
-                if (currentPlaylist != null) {
+                val allSongsPlaylist = playlists.firstOrNull()
+
+                if (allSongsPlaylist != null) {
                     songListSelectableAdapter =
                         SongListSelectableAdapter(
-                            currentPlaylist!!.songs,
+                            allSongsPlaylist.songs,
                         )
 
                     mainSongList.layoutManager = LinearLayoutManager(this)
@@ -111,7 +128,15 @@ class MainActivity : AppCompatActivity() {
         mainSongList = findViewById(R.id.mainSongList)
 
         searchBtn.setOnClickListener {
-            Toast.makeText(this, "no songs found", Toast.LENGTH_LONG).show()
+            val created = PlaylistModel("All Songs", LocalDatastore.songs)
+
+            playlists = playlists.filter { it.name != "All Songs" }.toMutableList()
+            playlists.add(created)
+
+            if (activityState == MainActivityState.PLAY_MUSIC) {
+                currentPlaylist = created
+                changeActivityState(MainActivityState.PLAY_MUSIC)
+            }
         }
 
         setSupportActionBar(toolbar)
@@ -123,14 +148,21 @@ class MainActivity : AppCompatActivity() {
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
                 return when (menuItem.itemId) {
                     R.id.mainMenuAddPlaylist -> {
+                        if (activityState == MainActivityState.ADD_PLAYLIST) return true
+
+                        if (playlists.isEmpty()) {
+                            Toast.makeText(
+                                this@MainActivity,
+                                "no songs loaded, click search to load songs",
+                                Toast.LENGTH_LONG
+                            ).show()
+
+                            return true
+                        }
+
                         changeActivityState(MainActivityState.ADD_PLAYLIST)
 
-                        Toast.makeText(
-                            this@MainActivity,
-                            "no songs loaded, click search to load songs",
-                            Toast.LENGTH_LONG
-                        ).show()
-                        true
+                        return true
                     }
 
                     R.id.mainMenuLoadPlaylist -> {

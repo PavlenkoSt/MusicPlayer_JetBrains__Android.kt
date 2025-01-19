@@ -10,7 +10,13 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.FragmentContainerView
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import org.hyperskill.musicplayer.States.MainActivityState
+import org.hyperskill.musicplayer.States.TrackState
+import org.hyperskill.musicplayer.models.PlaylistModel
+import org.hyperskill.musicplayer.models.SongModel
+import org.hyperskill.musicplayer.models.TrackModel
 
 class MainActivity : AppCompatActivity() {
     private lateinit var searchBtn: Button;
@@ -20,11 +26,42 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var activityState: MainActivityState
 
+    private var currentPlaylist: PlaylistModel? = PlaylistModel("Init", LocalDatastore.songs)
+    var currentTrack: TrackModel? = null
+        set(value) {
+            if (value != null && value.state == TrackState.PLAYING) {
+                songListAdapter?.currentTrack = value.song
+            } else {
+                songListAdapter?.currentTrack = null
+            }
+            field = value
+        }
+
+    private var songListAdapter: SongListAdapter? = null
+    private var songListSelectableAdapter: SongListSelectableAdapter? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         bindUI()
         changeActivityState(MainActivityState.PLAY_MUSIC)
+    }
+
+    private fun onTrackLongClick(position: Int) {
+        changeActivityState(MainActivityState.ADD_PLAYLIST)
+        songListSelectableAdapter?.selectedTrackPositions?.add(position)
+    }
+
+    private fun updateCurrentTrack(position: Int): SongModel? {
+        if (currentPlaylist == null) return null
+        val track = currentPlaylist!!.songs[position]
+        if (currentTrack?.song?.id != track.id) {
+            currentTrack = TrackModel(track, TrackState.PLAYING)
+            return track
+        } else {
+            currentTrack = null
+            return null
+        }
     }
 
     fun changeActivityState(state: MainActivityState) {
@@ -36,12 +73,33 @@ class MainActivity : AppCompatActivity() {
                 supportFragmentManager.beginTransaction().replace(
                     R.id.mainFragmentContainer, MainPlayerControllerFragment()
                 ).commit()
+
+                if (currentPlaylist != null) {
+                    songListAdapter = SongListAdapter(
+                        currentPlaylist!!.songs,
+                        ::updateCurrentTrack,
+                        ::onTrackLongClick
+                    )
+
+                    mainSongList.layoutManager = LinearLayoutManager(this)
+                    mainSongList.adapter = songListAdapter
+                }
             }
 
             MainActivityState.ADD_PLAYLIST -> {
                 supportFragmentManager.beginTransaction().replace(
                     R.id.mainFragmentContainer, MainAddPlaylistFragment()
                 ).commit()
+
+                if (currentPlaylist != null) {
+                    songListSelectableAdapter =
+                        SongListSelectableAdapter(
+                            currentPlaylist!!.songs,
+                        )
+
+                    mainSongList.layoutManager = LinearLayoutManager(this)
+                    mainSongList.adapter = songListSelectableAdapter
+                }
             }
         }
     }

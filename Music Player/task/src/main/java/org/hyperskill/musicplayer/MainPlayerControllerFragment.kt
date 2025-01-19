@@ -18,6 +18,7 @@ class MainPlayerControllerFragment : Fragment() {
         val view = inflater.inflate(R.layout.main_player_controller_fragment, container, false)
 
         val playPauseBtn = view.findViewById<Button>(R.id.controllerBtnPlayPause)
+        val stopBtn = view.findViewById<Button>(R.id.controllerBtnStop)
 
         val mainActivity = (activity as MainActivity)
 
@@ -25,10 +26,18 @@ class MainPlayerControllerFragment : Fragment() {
             if (mainActivity.currentTrack == null) return@setOnClickListener
 
             if (mainActivity.currentTrack!!.state == TrackState.PAUSED || mainActivity.currentTrack!!.state == TrackState.STOPPED) {
-                mainActivity.currentTrack = TrackModel(mainActivity.currentTrack!!.song, TrackState.PLAYING)
+                mainActivity.currentTrack =
+                    TrackModel(mainActivity.currentTrack!!.song, TrackState.PLAYING)
             } else {
-                mainActivity.currentTrack = TrackModel(mainActivity.currentTrack!!.song, TrackState.STOPPED)
+                mainActivity.currentTrack =
+                    TrackModel(mainActivity.currentTrack!!.song, TrackState.STOPPED)
             }
+        }
+
+        stopBtn.setOnClickListener {
+            if (mainActivity.currentTrack == null) return@setOnClickListener
+            mainActivity.currentTrack =
+                TrackModel(mainActivity.currentTrack!!.song, TrackState.STOPPED)
         }
 
         return view

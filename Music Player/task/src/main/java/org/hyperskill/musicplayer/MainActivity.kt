@@ -47,9 +47,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupObservers() {
         mainViewModel.currentTrack.observe(this) { currentTrack ->
-            if(currentTrack != null && currentTrack.state == TrackState.PLAYING) {
+            if (currentTrack != null && currentTrack.state == TrackState.PLAYING) {
                 songListAdapter?.currentTrack = currentTrack.song
-            }else{
+            } else {
                 songListAdapter?.currentTrack = null
             }
         }
@@ -194,6 +194,19 @@ class MainActivity : AppCompatActivity() {
                     R.id.mainMenuDeletePlaylist -> {
                         AlertDialog.Builder(this@MainActivity)
                             .setTitle("choose playlist to delete")
+                            .setItems(playlists.filter { it.name != "All Songs" }.map { it.name }
+                                .toTypedArray(),
+                                { dialog, idx ->
+                                    if (activityState == MainActivityState.ADD_PLAYLIST || currentPlaylist?.name == playlists[idx + 1].name) {
+                                        currentPlaylist = playlists.first() // All Songs
+                                        changeActivityState(activityState)
+                                    }
+
+                                    playlists.remove(playlists[idx + 1])
+
+                                    dialog.dismiss()
+                                }
+                            )
                             .setNegativeButton(
                                 "Cancel", null
                             ).show()

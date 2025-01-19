@@ -29,8 +29,10 @@ class MainAddPlaylistFragment : Fragment() {
         }
 
         addPlaylistBtnOk.setOnClickListener {
+            val playlistName = addPlaylistEtPlaylistName.text.toString().trim()
             val positions = mainActivity.songListSelectableAdapter?.selectedTrackPositions
-            if (positions.isNullOrEmpty()) {
+
+            if (positions.isNullOrEmpty() && !playlistName.equals("All Songs", ignoreCase = true)) {
                 Toast.makeText(
                     mainActivity,
                     "Add at least one song to your playlist",
@@ -39,13 +41,7 @@ class MainAddPlaylistFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            if (addPlaylistEtPlaylistName.text.toString().isEmpty()) {
-                Toast.makeText(mainActivity, "Add a name to your playlist", Toast.LENGTH_LONG)
-                    .show()
-                return@setOnClickListener
-            }
-
-            if (addPlaylistEtPlaylistName.text.toString() == "All Songs") {
+            if (playlistName.equals("All Songs", ignoreCase = true)) {
                 Toast.makeText(
                     mainActivity,
                     "All Songs is a reserved name choose another playlist name",
@@ -54,7 +50,13 @@ class MainAddPlaylistFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            mainActivity.addPlaylist(addPlaylistEtPlaylistName.text.toString(), positions)
+            if (playlistName.isEmpty()) {
+                Toast.makeText(mainActivity, "Add a name to your playlist", Toast.LENGTH_LONG)
+                    .show()
+                return@setOnClickListener
+            }
+
+            mainActivity.addPlaylist(addPlaylistEtPlaylistName.text.toString(), positions!!)
         }
 
         return view

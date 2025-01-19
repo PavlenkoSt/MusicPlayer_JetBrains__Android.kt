@@ -139,7 +139,7 @@ class MainActivity : AppCompatActivity() {
             val created = PlaylistModel("All Songs", LocalDatastore.songs)
 
             playlists = playlists.filter { it.name != "All Songs" }.toMutableList()
-            playlists.add(created)
+            playlists.add(0, created)
 
             if (activityState == MainActivityState.PLAY_MUSIC) {
                 currentPlaylist = created

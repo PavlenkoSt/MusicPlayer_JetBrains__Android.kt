@@ -43,24 +43,25 @@ class SongListSelectableAdapter(
         val formatter = SimpleDateFormat("mm:ss", Locale.getDefault())
         viewHolder.durationTv.text = formatter.format(dataSet[position].duration)
 
-        if(selectedTrackPositions.contains(position)) {
+        if (selectedTrackPositions.contains(position)) {
             viewHolder.itemView.setBackgroundColor(Color.LTGRAY)
             viewHolder.selectedCheckbox.isChecked = true
-        }else{
+        } else {
             viewHolder.itemView.setBackgroundColor(Color.WHITE)
             viewHolder.selectedCheckbox.isChecked = false
         }
 
-        viewHolder.selectedCheckbox.setOnCheckedChangeListener({ _, checked ->
-            if (checked) {
+        viewHolder.itemView.setOnClickListener {
+            if (selectedTrackPositions.contains(position)) {
+                selectedTrackPositions.remove(position)
+                viewHolder.itemView.setBackgroundColor(Color.WHITE)
+                viewHolder.selectedCheckbox.isChecked = false
+            } else {
                 selectedTrackPositions.add(position)
                 viewHolder.itemView.setBackgroundColor(Color.LTGRAY)
-            } else {
-                selectedTrackPositions =
-                    selectedTrackPositions.filter { it != position }.toMutableList()
-                viewHolder.itemView.setBackgroundColor(Color.WHITE)
+                viewHolder.selectedCheckbox.isChecked = true
             }
-        })
+        }
     }
 
     override fun getItemCount() = dataSet.size

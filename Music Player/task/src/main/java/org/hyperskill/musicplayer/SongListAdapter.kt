@@ -12,14 +12,10 @@ import java.util.Locale
 
 class SongListAdapter(
     private val dataSet: List<SongModel>,
-    private val changeCurrentTrack: (position: Int) -> SongModel?,
+    private val changeCurrentTrack: (position: Int) -> Unit,
     private val onLongClickedItem: (position: Int) -> Unit
 ) : RecyclerView.Adapter<SongListAdapter.ViewHolder>() {
     var currentTrack: SongModel? = null
-        set(value) {
-            field = value
-            notifyDataSetChanged()
-        }
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val artistTv: TextView
@@ -60,7 +56,19 @@ class SongListAdapter(
         }
 
         viewHolder.playPauseBtn.setOnClickListener {
-            currentTrack = changeCurrentTrack(position)
+            val prevTrackPosition = dataSet.indexOf(currentTrack)
+
+            changeCurrentTrack(position)
+
+            if (dataSet[position].id == currentTrack?.id) {
+                viewHolder.playPauseBtn.setImageResource(R.drawable.ic_pause)
+            } else {
+                viewHolder.playPauseBtn.setImageResource(R.drawable.ic_play)
+            }
+
+            if(prevTrackPosition >= 0) {
+                notifyItemChanged(prevTrackPosition)
+            }
         }
     }
 

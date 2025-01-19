@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import android.widget.Button
 import androidx.fragment.app.Fragment
 import org.hyperskill.musicplayer.States.TrackState
-import org.hyperskill.musicplayer.models.TrackModel
 
 class MainPlayerControllerFragment : Fragment() {
     override fun onCreateView(
@@ -23,21 +22,20 @@ class MainPlayerControllerFragment : Fragment() {
         val mainActivity = (activity as MainActivity)
 
         playPauseBtn.setOnClickListener {
-            if (mainActivity.currentTrack == null) return@setOnClickListener
+            val currentTrack = mainActivity.mainViewModel.currentTrack.value ?: return@setOnClickListener
 
-            if (mainActivity.currentTrack!!.state == TrackState.PAUSED || mainActivity.currentTrack!!.state == TrackState.STOPPED) {
-                mainActivity.currentTrack =
-                    TrackModel(mainActivity.currentTrack!!.song, TrackState.PLAYING)
+            if (currentTrack.state == TrackState.PAUSED || currentTrack.state == TrackState.STOPPED) {
+                mainActivity.mainViewModel.updateCurrentTrackStatus(TrackState.PLAYING)
             } else {
-                mainActivity.currentTrack =
-                    TrackModel(mainActivity.currentTrack!!.song, TrackState.STOPPED)
+                mainActivity.mainViewModel.updateCurrentTrackStatus(TrackState.PAUSED)
             }
+
+            mainActivity.songListAdapter?.notifyDataSetChanged()
         }
 
         stopBtn.setOnClickListener {
-            if (mainActivity.currentTrack == null) return@setOnClickListener
-            mainActivity.currentTrack =
-                TrackModel(mainActivity.currentTrack!!.song, TrackState.STOPPED)
+            mainActivity.mainViewModel.updateCurrentTrackStatus(TrackState.STOPPED)
+            mainActivity.songListAdapter?.notifyDataSetChanged()
         }
 
         return view

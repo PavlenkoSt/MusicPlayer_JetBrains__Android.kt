@@ -10,13 +10,13 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.FragmentContainerView
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import org.hyperskill.musicplayer.States.MainActivityState
 import org.hyperskill.musicplayer.States.TrackState
 import org.hyperskill.musicplayer.models.PlaylistModel
-import org.hyperskill.musicplayer.models.SongModel
-import org.hyperskill.musicplayer.models.TrackModel
+
 
 class MainActivity : AppCompatActivity() {
     private lateinit var searchBtn: Button;
@@ -24,29 +24,35 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fragmentContainerView: FragmentContainerView
     private lateinit var mainSongList: RecyclerView
 
+    lateinit var mainViewModel: MainViewModel
+
     var activityState: MainActivityState = MainActivityState.PLAY_MUSIC
 
     private var playlists = mutableListOf<PlaylistModel>()
     private var currentPlaylist: PlaylistModel? = null
 
-    var currentTrack: TrackModel? = null
-        set(value) {
-            if (value != null && value.state == TrackState.PLAYING) {
-                songListAdapter?.currentTrack = value.song
-            } else {
-                songListAdapter?.currentTrack = null
-            }
-            field = value
-        }
-
-    private var songListAdapter: SongListAdapter? = null
+    var songListAdapter: SongListAdapter? = null
     var songListSelectableAdapter: SongListSelectableAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        mainViewModel = ViewModelProvider(this).get(MainViewModel::class.java)
+
         setContentView(R.layout.activity_main)
+        setupObservers()
         bindUI()
         changeActivityState(MainActivityState.PLAY_MUSIC)
+    }
+
+    private fun setupObservers() {
+        mainViewModel.currentTrack.observe(this) { currentTrack ->
+            if(currentTrack != null && currentTrack.state == TrackState.PLAYING) {
+                songListAdapter?.currentTrack = currentTrack.song
+            }else{
+                songListAdapter?.currentTrack = null
+            }
+        }
     }
 
     private fun onTrackLongClick(position: Int) {
@@ -54,16 +60,11 @@ class MainActivity : AppCompatActivity() {
         songListSelectableAdapter?.selectedTrackPositions?.add(position)
     }
 
-    private fun updateCurrentTrack(position: Int): SongModel? {
-        if (currentPlaylist == null) return null
+    private fun updateCurrentTrack(position: Int) {
+        if (currentPlaylist == null) return
         val track = currentPlaylist!!.songs[position]
-        if (currentTrack?.song?.id != track.id) {
-            currentTrack = TrackModel(track, TrackState.PLAYING)
-            return track
-        } else {
-            currentTrack = TrackModel(track, TrackState.PAUSED)
-            return null
-        }
+
+        mainViewModel.updateCurrentTrack(track)
     }
 
     fun addPlaylist(name: String, songPositions: List<Int>) {
@@ -111,7 +112,7 @@ class MainActivity : AppCompatActivity() {
                 ).commit()
 
                 if (currentPlaylist == null) {
-                    val allSongsPlaylist = playlists.find{it.name == "All Songs"}
+                    val allSongsPlaylist = playlists.find { it.name == "All Songs" }
                     currentPlaylist = allSongsPlaylist
                 }
 

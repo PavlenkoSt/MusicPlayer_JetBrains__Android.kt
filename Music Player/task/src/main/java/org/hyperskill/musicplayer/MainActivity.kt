@@ -67,10 +67,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun addPlaylist(name: String, songPositions: List<Int>) {
-        val allSongs = playlists.firstOrNull() ?: return
-        val songsToAdd =   allSongs.songs.filterIndexed { idx, _ -> songPositions.contains(idx) }
+        val allSongs = currentPlaylist ?: return
+        val songsToAdd = allSongs.songs.filterIndexed { idx, _ -> songPositions.contains(idx) }
 
-        playlists.add(PlaylistModel(name, songsToAdd))
+        val newPlaylist = PlaylistModel(name, songsToAdd)
+
+        playlists.add(newPlaylist)
+
+        currentPlaylist = newPlaylist
 
         changeActivityState(MainActivityState.PLAY_MUSIC)
     }
@@ -106,12 +110,15 @@ class MainActivity : AppCompatActivity() {
                     R.id.mainFragmentContainer, MainAddPlaylistFragment()
                 ).commit()
 
-                val allSongsPlaylist = playlists.firstOrNull()
+                if (currentPlaylist == null) {
+                    val allSongsPlaylist = playlists.find{it.name == "All Songs"}
+                    currentPlaylist = allSongsPlaylist
+                }
 
-                if (allSongsPlaylist != null) {
+                if (currentPlaylist != null) {
                     songListSelectableAdapter =
                         SongListSelectableAdapter(
-                            allSongsPlaylist.songs,
+                            currentPlaylist!!.songs,
                         )
 
                     mainSongList.layoutManager = LinearLayoutManager(this)
@@ -168,6 +175,15 @@ class MainActivity : AppCompatActivity() {
                     R.id.mainMenuLoadPlaylist -> {
                         AlertDialog.Builder(this@MainActivity)
                             .setTitle("choose playlist to load")
+                            .setItems(playlists.map { it.name }.toTypedArray(), { dialog, idx ->
+                                currentPlaylist = playlists[idx]
+                                dialog.dismiss()
+                                if (activityState == MainActivityState.ADD_PLAYLIST) {
+                                    changeActivityState(MainActivityState.ADD_PLAYLIST)
+                                } else {
+                                    changeActivityState(MainActivityState.PLAY_MUSIC)
+                                }
+                            })
                             .setNegativeButton(
                                 "Cancel", null
                             ).show()

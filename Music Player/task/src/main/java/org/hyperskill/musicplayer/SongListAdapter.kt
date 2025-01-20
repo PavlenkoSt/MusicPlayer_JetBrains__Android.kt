@@ -12,10 +12,15 @@ import java.util.Locale
 
 class SongListAdapter(
     private val dataSet: List<SongModel>,
+    currentTrackParam: SongModel?,
     private val changeCurrentTrack: (position: Int) -> Unit,
     private val onLongClickedItem: (position: Int) -> Unit
 ) : RecyclerView.Adapter<SongListAdapter.ViewHolder>() {
     var currentTrack: SongModel? = null
+
+    init {
+        currentTrack = currentTrackParam
+    }
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val artistTv: TextView

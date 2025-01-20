@@ -94,6 +94,7 @@ class MainActivity : AppCompatActivity() {
                 if (currentPlaylist != null) {
                     songListAdapter = SongListAdapter(
                         currentPlaylist!!.songs,
+                        mainViewModel.currentTrack.value?.song,
                         ::updateCurrentTrack,
                         ::onTrackLongClick
                     )

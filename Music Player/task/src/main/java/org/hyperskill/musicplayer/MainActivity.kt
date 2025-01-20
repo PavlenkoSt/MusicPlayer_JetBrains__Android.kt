@@ -13,10 +13,9 @@ import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import org.hyperskill.musicplayer.States.MainActivityState
-import org.hyperskill.musicplayer.States.TrackState
+import org.hyperskill.musicplayer.states.MainActivityState
+import org.hyperskill.musicplayer.states.TrackState
 import org.hyperskill.musicplayer.models.PlaylistModel
-
 
 class MainActivity : AppCompatActivity() {
     private lateinit var searchBtn: Button;
@@ -90,7 +89,7 @@ class MainActivity : AppCompatActivity() {
                 ).commit()
 
                 if (currentPlaylist == null) {
-                    val allSongs = playlists.find { it.name == "All Songs" }
+                    val allSongs = playlists.find { it.name == RESERVED_PLAYLIST_NAME }
                     currentPlaylist = allSongs
                 }
 
@@ -112,7 +111,7 @@ class MainActivity : AppCompatActivity() {
                 ).commit()
 
                 if (currentPlaylist == null) {
-                    val allSongsPlaylist = playlists.find { it.name == "All Songs" }
+                    val allSongsPlaylist = playlists.find { it.name == RESERVED_PLAYLIST_NAME }
                     currentPlaylist = allSongsPlaylist
                 }
 
@@ -136,9 +135,9 @@ class MainActivity : AppCompatActivity() {
         mainSongList = findViewById(R.id.mainSongList)
 
         searchBtn.setOnClickListener {
-            val created = PlaylistModel("All Songs", LocalDatastore.songs)
+            val created = PlaylistModel(RESERVED_PLAYLIST_NAME, LocalDatastore.songs)
 
-            playlists = playlists.filter { it.name != "All Songs" }.toMutableList()
+            playlists = playlists.filter { it.name != RESERVED_PLAYLIST_NAME }.toMutableList()
             playlists.add(0, created)
 
             if (activityState == MainActivityState.PLAY_MUSIC) {
@@ -194,7 +193,7 @@ class MainActivity : AppCompatActivity() {
                     R.id.mainMenuDeletePlaylist -> {
                         AlertDialog.Builder(this@MainActivity)
                             .setTitle("choose playlist to delete")
-                            .setItems(playlists.filter { it.name != "All Songs" }.map { it.name }
+                            .setItems(playlists.filter { it.name != RESERVED_PLAYLIST_NAME }.map { it.name }
                                 .toTypedArray(),
                                 { dialog, idx ->
                                     if (activityState == MainActivityState.ADD_PLAYLIST || currentPlaylist?.name == playlists[idx + 1].name) {

@@ -8,7 +8,7 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import org.hyperskill.musicplayer.States.MainActivityState
+import org.hyperskill.musicplayer.states.MainActivityState
 
 class MainAddPlaylistFragment : Fragment() {
     override fun onCreateView(
@@ -32,7 +32,7 @@ class MainAddPlaylistFragment : Fragment() {
             val playlistName = addPlaylistEtPlaylistName.text.toString().trim()
             val positions = mainActivity.songListSelectableAdapter?.selectedTrackPositions
 
-            if (positions.isNullOrEmpty() && !playlistName.equals("All Songs", ignoreCase = true)) {
+            if (positions.isNullOrEmpty() && !playlistName.equals(RESERVED_PLAYLIST_NAME, ignoreCase = true)) {
                 Toast.makeText(
                     mainActivity,
                     "Add at least one song to your playlist",
@@ -41,7 +41,7 @@ class MainAddPlaylistFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            if (playlistName.equals("All Songs", ignoreCase = true)) {
+            if (playlistName.equals(RESERVED_PLAYLIST_NAME, ignoreCase = true)) {
                 Toast.makeText(
                     mainActivity,
                     "All Songs is a reserved name choose another playlist name",

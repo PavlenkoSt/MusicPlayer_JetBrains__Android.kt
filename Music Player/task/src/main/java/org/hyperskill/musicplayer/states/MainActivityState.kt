@@ -1,4 +1,4 @@
-package org.hyperskill.musicplayer.States
+package org.hyperskill.musicplayer.states
 
 enum class MainActivityState {
     PLAY_MUSIC,

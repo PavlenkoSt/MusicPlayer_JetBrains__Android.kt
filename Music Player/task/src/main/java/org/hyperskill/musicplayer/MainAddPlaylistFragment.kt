@@ -8,7 +8,7 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import org.hyperskill.musicplayer.states.MainActivityState
+import org.hyperskill.musicplayer.stateEnums.MainActivityState
 
 class MainAddPlaylistFragment : Fragment() {
     override fun onCreateView(

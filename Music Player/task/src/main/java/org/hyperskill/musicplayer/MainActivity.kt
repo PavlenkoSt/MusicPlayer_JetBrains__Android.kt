@@ -13,8 +13,8 @@ import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import org.hyperskill.musicplayer.states.MainActivityState
-import org.hyperskill.musicplayer.states.TrackState
+import org.hyperskill.musicplayer.stateEnums.MainActivityState
+import org.hyperskill.musicplayer.stateEnums.TrackState
 import org.hyperskill.musicplayer.models.PlaylistModel
 
 class MainActivity : AppCompatActivity() {
@@ -73,8 +73,6 @@ class MainActivity : AppCompatActivity() {
         val newPlaylist = PlaylistModel(name, songsToAdd)
 
         playlists.add(newPlaylist)
-
-        currentPlaylist = newPlaylist
 
         changeActivityState(MainActivityState.PLAY_MUSIC)
     }

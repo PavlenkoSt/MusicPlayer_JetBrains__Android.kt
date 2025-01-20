@@ -1,6 +1,6 @@
 package org.hyperskill.musicplayer.models
 
-import org.hyperskill.musicplayer.states.TrackState
+import org.hyperskill.musicplayer.stateEnums.TrackState
 
 data class TrackModel(
     val song: SongModel,

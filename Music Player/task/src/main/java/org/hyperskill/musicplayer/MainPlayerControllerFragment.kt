@@ -6,7 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.fragment.app.Fragment
-import org.hyperskill.musicplayer.states.TrackState
+import org.hyperskill.musicplayer.stateEnums.TrackState
 
 class MainPlayerControllerFragment : Fragment() {
     override fun onCreateView(

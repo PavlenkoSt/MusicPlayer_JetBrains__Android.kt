@@ -3,7 +3,7 @@ package org.hyperskill.musicplayer
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import org.hyperskill.musicplayer.states.TrackState
+import org.hyperskill.musicplayer.stateEnums.TrackState
 import org.hyperskill.musicplayer.models.SongModel
 import org.hyperskill.musicplayer.models.TrackModel
 

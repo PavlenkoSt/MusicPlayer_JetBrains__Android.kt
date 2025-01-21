@@ -7,16 +7,18 @@ import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import org.hyperskill.musicplayer.models.SongModel
+import org.hyperskill.musicplayer.models.TrackModel
+import org.hyperskill.musicplayer.stateEnums.TrackState
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 class SongListAdapter(
     private val dataSet: List<SongModel>,
-    currentTrackParam: SongModel?,
+    currentTrackParam: TrackModel?,
     private val changeCurrentTrack: (position: Int) -> Unit,
     private val onLongClickedItem: (position: Int) -> Unit
 ) : RecyclerView.Adapter<SongListAdapter.ViewHolder>() {
-    var currentTrack: SongModel? = null
+    var currentTrack: TrackModel? = null
 
     init {
         currentTrack = currentTrackParam
@@ -49,29 +51,37 @@ class SongListAdapter(
         val formatter = SimpleDateFormat("mm:ss", Locale.getDefault())
         viewHolder.durationTv.text = formatter.format(dataSet[position].duration)
 
-        if (dataSet[position].id == currentTrack?.id) {
-            viewHolder.playPauseBtn.setImageResource(R.drawable.ic_pause)
+        if (dataSet[position].id == currentTrack?.song?.id) {
+            if (currentTrack?.state == TrackState.PLAYING) {
+                viewHolder.playPauseBtn.setImageResource(R.drawable.ic_pause)
+            } else {
+                viewHolder.playPauseBtn.setImageResource(R.drawable.ic_play)
+            }
         } else {
             viewHolder.playPauseBtn.setImageResource(R.drawable.ic_play)
         }
 
-        viewHolder.itemView.setOnLongClickListener{
+        viewHolder.itemView.setOnLongClickListener {
             onLongClickedItem(position)
             true
         }
 
         viewHolder.playPauseBtn.setOnClickListener {
-            val prevTrackPosition = dataSet.indexOf(currentTrack)
+            val prevTrackPosition = dataSet.indexOf(currentTrack?.song)
 
             changeCurrentTrack(position)
 
-            if (dataSet[position].id == currentTrack?.id) {
-                viewHolder.playPauseBtn.setImageResource(R.drawable.ic_pause)
+            if (dataSet[position].id == currentTrack?.song?.id) {
+                if (currentTrack?.state == TrackState.PLAYING) {
+                    viewHolder.playPauseBtn.setImageResource(R.drawable.ic_pause)
+                } else {
+                    viewHolder.playPauseBtn.setImageResource(R.drawable.ic_play)
+                }
             } else {
                 viewHolder.playPauseBtn.setImageResource(R.drawable.ic_play)
             }
 
-            if(prevTrackPosition >= 0) {
+            if (prevTrackPosition >= 0) {
                 notifyItemChanged(prevTrackPosition)
             }
         }

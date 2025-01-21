@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView
 import org.hyperskill.musicplayer.stateEnums.MainActivityState
 import org.hyperskill.musicplayer.stateEnums.TrackState
 import org.hyperskill.musicplayer.models.PlaylistModel
+import org.hyperskill.musicplayer.models.TrackModel
 
 class MainActivity : AppCompatActivity() {
     private lateinit var searchBtn: Button;
@@ -46,11 +47,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupObservers() {
         mainViewModel.currentTrack.observe(this) { currentTrack ->
-            if (currentTrack != null && currentTrack.state == TrackState.PLAYING) {
-                songListAdapter?.currentTrack = currentTrack.song
-            } else {
-                songListAdapter?.currentTrack = null
-            }
+            songListAdapter?.currentTrack = currentTrack
         }
     }
 
@@ -74,6 +71,18 @@ class MainActivity : AppCompatActivity() {
 
         playlists.add(newPlaylist)
 
+        if (
+            mainViewModel.currentTrack.value == null ||
+            !songsToAdd.contains(mainViewModel.currentTrack.value?.song)
+        ) {
+            mainViewModel.setCurrentTrack(
+                TrackModel(
+                    song = songsToAdd[0],
+                    state = TrackState.STOPPED,
+                )
+            )
+        }
+
         changeActivityState(MainActivityState.PLAY_MUSIC)
     }
 
@@ -93,8 +102,8 @@ class MainActivity : AppCompatActivity() {
 
                 if (currentPlaylist != null) {
                     songListAdapter = SongListAdapter(
-                        currentPlaylist!!.songs,
-                        mainViewModel.currentTrack.value?.song,
+                        currentPlaylist?.songs ?: emptyList(),
+                        mainViewModel.currentTrack.value,
                         ::updateCurrentTrack,
                         ::onTrackLongClick
                     )
@@ -172,9 +181,11 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     R.id.mainMenuLoadPlaylist -> {
+                        val items = playlists.map { it.name }.toTypedArray()
+
                         AlertDialog.Builder(this@MainActivity)
                             .setTitle("choose playlist to load")
-                            .setItems(playlists.map { it.name }.toTypedArray(), { dialog, idx ->
+                            .setItems(items, { dialog, idx ->
                                 currentPlaylist = playlists[idx]
                                 dialog.dismiss()
                                 if (activityState == MainActivityState.ADD_PLAYLIST) {
@@ -190,10 +201,13 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     R.id.mainMenuDeletePlaylist -> {
+                        val items = playlists.filter { it.name != RESERVED_PLAYLIST_NAME }
+                            .map { it.name }
+                            .toTypedArray()
+
                         AlertDialog.Builder(this@MainActivity)
                             .setTitle("choose playlist to delete")
-                            .setItems(playlists.filter { it.name != RESERVED_PLAYLIST_NAME }.map { it.name }
-                                .toTypedArray(),
+                            .setItems(items,
                                 { dialog, idx ->
                                     if (activityState == MainActivityState.ADD_PLAYLIST || currentPlaylist?.name == playlists[idx + 1].name) {
                                         currentPlaylist = playlists.first() // All Songs

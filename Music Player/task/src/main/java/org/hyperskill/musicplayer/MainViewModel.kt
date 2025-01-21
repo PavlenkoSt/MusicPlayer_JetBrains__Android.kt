@@ -28,6 +28,10 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    fun setCurrentTrack(track: TrackModel) {
+        _currentTrack.value = track
+    }
+
     fun updateCurrentTrackStatus(state: TrackState) {
         _currentTrack.value = _currentTrack.value?.copy(
             state = state

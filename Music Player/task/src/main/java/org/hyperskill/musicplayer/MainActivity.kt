@@ -71,18 +71,6 @@ class MainActivity : AppCompatActivity() {
 
         playlists.add(newPlaylist)
 
-        if (
-            mainViewModel.currentTrack.value == null ||
-            !songsToAdd.contains(mainViewModel.currentTrack.value?.song)
-        ) {
-            mainViewModel.setCurrentTrack(
-                TrackModel(
-                    song = songsToAdd[0],
-                    state = TrackState.STOPPED,
-                )
-            )
-        }
-
         changeActivityState(MainActivityState.PLAY_MUSIC)
     }
 
@@ -187,6 +175,20 @@ class MainActivity : AppCompatActivity() {
                             .setTitle("choose playlist to load")
                             .setItems(items, { dialog, idx ->
                                 currentPlaylist = playlists[idx]
+
+                                if (mainViewModel.currentTrack.value == null
+                                    || !currentPlaylist!!.songs.contains(
+                                        mainViewModel.currentTrack.value?.song
+                                    )
+                                ) {
+                                    mainViewModel.setCurrentTrack(
+                                        TrackModel(
+                                            song = currentPlaylist!!.songs[0],
+                                            state = TrackState.STOPPED,
+                                        )
+                                    )
+                                }
+
                                 dialog.dismiss()
                                 if (activityState == MainActivityState.ADD_PLAYLIST) {
                                     changeActivityState(MainActivityState.ADD_PLAYLIST)

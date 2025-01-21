@@ -13,8 +13,15 @@ import java.util.Locale
 
 class SongListSelectableAdapter(
     private val dataSet: List<SongModel>,
+    initialPositions: List<Int>?
 ) : RecyclerView.Adapter<SongListSelectableAdapter.ViewHolder>() {
-    var selectedTrackPositions = mutableListOf<Int>()
+    var selectedTrackIds = mutableListOf<Int>()
+
+    init {
+        if(initialPositions != null) {
+            selectedTrackIds = initialPositions.toMutableList()
+        }
+    }
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val artistTv: TextView
@@ -43,7 +50,9 @@ class SongListSelectableAdapter(
         val formatter = SimpleDateFormat("mm:ss", Locale.getDefault())
         viewHolder.durationTv.text = formatter.format(dataSet[position].duration)
 
-        if (selectedTrackPositions.contains(position)) {
+        val id = dataSet[position].id
+
+        if (selectedTrackIds.contains(id)) {
             viewHolder.itemView.setBackgroundColor(Color.LTGRAY)
             viewHolder.selectedCheckbox.isChecked = true
         } else {
@@ -53,25 +62,30 @@ class SongListSelectableAdapter(
 
         viewHolder.selectedCheckbox.setOnCheckedChangeListener { btn, checked ->
             if (checked) {
-                selectedTrackPositions.add(position)
+                selectedTrackIds.add(id)
                 viewHolder.itemView.setBackgroundColor(Color.LTGRAY)
             } else {
-                selectedTrackPositions.remove(position)
+                selectedTrackIds.remove(id)
                 viewHolder.itemView.setBackgroundColor(Color.WHITE)
             }
         }
 
         viewHolder.itemView.setOnClickListener {
-            if (selectedTrackPositions.contains(position)) {
-                selectedTrackPositions.remove(position)
+            if (selectedTrackIds.contains(id)) {
+                selectedTrackIds.remove(id)
                 viewHolder.itemView.setBackgroundColor(Color.WHITE)
                 viewHolder.selectedCheckbox.isChecked = false
             } else {
-                selectedTrackPositions.add(position)
+                selectedTrackIds.add(id)
                 viewHolder.itemView.setBackgroundColor(Color.LTGRAY)
                 viewHolder.selectedCheckbox.isChecked = true
             }
         }
+    }
+
+    fun selectSongByPosition (position: Int) {
+        val id = dataSet[position].id
+        selectedTrackIds.add(id)
     }
 
     override fun getItemCount() = dataSet.size

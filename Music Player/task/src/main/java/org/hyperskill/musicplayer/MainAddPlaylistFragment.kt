@@ -30,9 +30,9 @@ class MainAddPlaylistFragment : Fragment() {
 
         addPlaylistBtnOk.setOnClickListener {
             val playlistName = addPlaylistEtPlaylistName.text.toString().trim()
-            val positions = mainActivity.songListSelectableAdapter?.selectedTrackPositions
+            val ids = mainActivity.songListSelectableAdapter?.selectedTrackIds
 
-            if (positions.isNullOrEmpty() && !playlistName.equals(RESERVED_PLAYLIST_NAME, ignoreCase = true)) {
+            if (ids.isNullOrEmpty() && !playlistName.equals(RESERVED_PLAYLIST_NAME, ignoreCase = true)) {
                 Toast.makeText(
                     mainActivity,
                     "Add at least one song to your playlist",
@@ -56,7 +56,7 @@ class MainAddPlaylistFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            mainActivity.addPlaylist(addPlaylistEtPlaylistName.text.toString(), positions!!)
+            mainActivity.addPlaylist(addPlaylistEtPlaylistName.text.toString(), ids!!)
         }
 
         return view

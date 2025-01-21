@@ -30,6 +30,7 @@ class MainActivity : AppCompatActivity() {
 
     private var playlists = mutableListOf<PlaylistModel>()
     private var currentPlaylist: PlaylistModel? = null
+    private var currentPlaylistSelectFrom: PlaylistModel? = null
 
     var songListAdapter: SongListAdapter? = null
     var songListSelectableAdapter: SongListSelectableAdapter? = null
@@ -53,7 +54,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun onTrackLongClick(position: Int) {
         changeActivityState(MainActivityState.ADD_PLAYLIST)
-        songListSelectableAdapter?.selectedTrackPositions?.add(position)
+        songListSelectableAdapter?.selectSongByPosition(position)
     }
 
     private fun updateCurrentTrack(position: Int) {
@@ -63,9 +64,9 @@ class MainActivity : AppCompatActivity() {
         mainViewModel.updateCurrentTrack(track)
     }
 
-    fun addPlaylist(name: String, songPositions: List<Int>) {
+    fun addPlaylist(name: String, songIds: List<Int>) {
         val allSongs = currentPlaylist ?: return
-        val songsToAdd = allSongs.songs.filterIndexed { idx, _ -> songPositions.contains(idx) }
+        val songsToAdd = allSongs.songs.filter { songIds.contains(it.id) }
 
         val newPlaylist = PlaylistModel(name, songsToAdd)
 
@@ -88,17 +89,15 @@ class MainActivity : AppCompatActivity() {
                     currentPlaylist = allSongs
                 }
 
-                if (currentPlaylist != null) {
-                    songListAdapter = SongListAdapter(
-                        currentPlaylist?.songs ?: emptyList(),
-                        mainViewModel.currentTrack.value,
-                        ::updateCurrentTrack,
-                        ::onTrackLongClick
-                    )
+                songListAdapter = SongListAdapter(
+                    currentPlaylist?.songs ?: emptyList(),
+                    mainViewModel.currentTrack.value,
+                    ::updateCurrentTrack,
+                    ::onTrackLongClick
+                )
 
-                    mainSongList.layoutManager = LinearLayoutManager(this)
-                    mainSongList.adapter = songListAdapter
-                }
+                mainSongList.layoutManager = LinearLayoutManager(this)
+                mainSongList.adapter = songListAdapter
             }
 
             MainActivityState.ADD_PLAYLIST -> {
@@ -106,20 +105,17 @@ class MainActivity : AppCompatActivity() {
                     R.id.mainFragmentContainer, MainAddPlaylistFragment()
                 ).commit()
 
-                if (currentPlaylist == null) {
-                    val allSongsPlaylist = playlists.find { it.name == RESERVED_PLAYLIST_NAME }
-                    currentPlaylist = allSongsPlaylist
-                }
+                currentPlaylistSelectFrom =
+                    currentPlaylist ?: playlists.find { it.name == RESERVED_PLAYLIST_NAME }
 
-                if (currentPlaylist != null) {
-                    songListSelectableAdapter =
-                        SongListSelectableAdapter(
-                            currentPlaylist!!.songs,
-                        )
+                songListSelectableAdapter =
+                    SongListSelectableAdapter(
+                        currentPlaylistSelectFrom!!.songs,
+                        null
+                    )
 
-                    mainSongList.layoutManager = LinearLayoutManager(this)
-                    mainSongList.adapter = songListSelectableAdapter
-                }
+                mainSongList.layoutManager = LinearLayoutManager(this)
+                mainSongList.adapter = songListSelectableAdapter
             }
         }
     }
@@ -174,27 +170,47 @@ class MainActivity : AppCompatActivity() {
                         AlertDialog.Builder(this@MainActivity)
                             .setTitle("choose playlist to load")
                             .setItems(items, { dialog, idx ->
-                                currentPlaylist = playlists[idx]
+                                val playlistPressedTo = playlists[idx]
 
-                                if (mainViewModel.currentTrack.value == null
-                                    || !currentPlaylist!!.songs.contains(
-                                        mainViewModel.currentTrack.value?.song
-                                    )
-                                ) {
-                                    mainViewModel.setCurrentTrack(
-                                        TrackModel(
-                                            song = currentPlaylist!!.songs[0],
-                                            state = TrackState.STOPPED,
+                                if (activityState == MainActivityState.ADD_PLAYLIST) {
+                                    currentPlaylistSelectFrom = playlistPressedTo
+
+                                    val savedSelectedItems =
+                                        songListSelectableAdapter?.selectedTrackIds.orEmpty()
+                                    val newSelectedItems =
+                                        currentPlaylistSelectFrom?.songs
+                                            ?.filter { savedSelectedItems.contains(it.id) }
+                                            .orEmpty()
+                                            .map { it.id }
+
+                                    songListSelectableAdapter =
+                                        SongListSelectableAdapter(
+                                            currentPlaylistSelectFrom!!.songs,
+                                            newSelectedItems
                                         )
-                                    )
+
+                                    mainSongList.adapter = songListSelectableAdapter
+                                } else {
+                                    currentPlaylist = playlistPressedTo
+
+                                    if (mainViewModel.currentTrack.value == null
+                                        || !currentPlaylist!!.songs.contains(
+                                            mainViewModel.currentTrack.value?.song
+                                        )
+                                    ) {
+                                        mainViewModel.setCurrentTrack(
+                                            TrackModel(
+                                                song = currentPlaylist!!.songs[0],
+                                                state = TrackState.STOPPED,
+                                            )
+                                        )
+                                    }
+
+                                    changeActivityState(MainActivityState.PLAY_MUSIC)
                                 }
 
                                 dialog.dismiss()
-                                if (activityState == MainActivityState.ADD_PLAYLIST) {
-                                    changeActivityState(MainActivityState.ADD_PLAYLIST)
-                                } else {
-                                    changeActivityState(MainActivityState.PLAY_MUSIC)
-                                }
+
                             })
                             .setNegativeButton(
                                 "Cancel", null

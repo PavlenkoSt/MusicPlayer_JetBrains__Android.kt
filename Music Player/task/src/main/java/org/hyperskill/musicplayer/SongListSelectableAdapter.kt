@@ -51,6 +51,16 @@ class SongListSelectableAdapter(
             viewHolder.selectedCheckbox.isChecked = false
         }
 
+        viewHolder.selectedCheckbox.setOnCheckedChangeListener { btn, checked ->
+            if (checked) {
+                selectedTrackPositions.add(position)
+                viewHolder.itemView.setBackgroundColor(Color.LTGRAY)
+            } else {
+                selectedTrackPositions.remove(position)
+                viewHolder.itemView.setBackgroundColor(Color.WHITE)
+            }
+        }
+
         viewHolder.itemView.setOnClickListener {
             if (selectedTrackPositions.contains(position)) {
                 selectedTrackPositions.remove(position)

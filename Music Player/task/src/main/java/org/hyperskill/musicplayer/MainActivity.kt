@@ -120,6 +120,26 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun updateSelectableSongListAdapter(playlist: PlaylistModel?) {
+        currentPlaylistSelectFrom = playlist
+
+        val savedSelectedItems =
+            songListSelectableAdapter?.selectedTrackIds.orEmpty()
+        val newSelectedItems =
+            currentPlaylistSelectFrom?.songs
+                ?.filter { savedSelectedItems.contains(it.id) }
+                .orEmpty()
+                .map { it.id }
+
+        songListSelectableAdapter =
+            SongListSelectableAdapter(
+                currentPlaylistSelectFrom!!.songs,
+                newSelectedItems
+            )
+
+        mainSongList.adapter = songListSelectableAdapter
+    }
+
     private fun bindUI() {
         searchBtn = findViewById(R.id.mainButtonSearch)
         toolbar = findViewById(R.id.toolbar)
@@ -128,6 +148,11 @@ class MainActivity : AppCompatActivity() {
 
         searchBtn.setOnClickListener {
             val created = PlaylistModel(RESERVED_PLAYLIST_NAME, LocalDatastore.songs)
+
+            if(activityState == MainActivityState.ADD_PLAYLIST) {
+                updateSelectableSongListAdapter(created)
+                return@setOnClickListener
+            }
 
             playlists = playlists.filter { it.name != RESERVED_PLAYLIST_NAME }.toMutableList()
             playlists.add(0, created)
@@ -173,23 +198,7 @@ class MainActivity : AppCompatActivity() {
                                 val playlistPressedTo = playlists[idx]
 
                                 if (activityState == MainActivityState.ADD_PLAYLIST) {
-                                    currentPlaylistSelectFrom = playlistPressedTo
-
-                                    val savedSelectedItems =
-                                        songListSelectableAdapter?.selectedTrackIds.orEmpty()
-                                    val newSelectedItems =
-                                        currentPlaylistSelectFrom?.songs
-                                            ?.filter { savedSelectedItems.contains(it.id) }
-                                            .orEmpty()
-                                            .map { it.id }
-
-                                    songListSelectableAdapter =
-                                        SongListSelectableAdapter(
-                                            currentPlaylistSelectFrom!!.songs,
-                                            newSelectedItems
-                                        )
-
-                                    mainSongList.adapter = songListSelectableAdapter
+                                    updateSelectableSongListAdapter(playlistPressedTo)
                                 } else {
                                     currentPlaylist = playlistPressedTo
 

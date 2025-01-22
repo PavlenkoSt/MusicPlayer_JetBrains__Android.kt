@@ -20,8 +20,12 @@ class MainActivity : AppCompatActivity() {
     private var activityState: MainActivityState = MainActivityState.PLAY_MUSIC
 
     private var playlists = mutableListOf<PlaylistModel>()
-    private var currentPlaylist: PlaylistModel? = null
     private var currentPlaylistSelectFrom: PlaylistModel? = null
+    private var currentPlaylist: PlaylistModel? = null
+        set(value) {
+            currentPlaylistSelectFrom = value
+            field = value
+        }
 
     var songListAdapter: SongListAdapter? = null
     var songListSelectableAdapter: SongListSelectableAdapter? = null
@@ -76,13 +80,8 @@ class MainActivity : AppCompatActivity() {
                     R.id.mainFragmentContainer, MainPlayerControllerFragment()
                 ).commit()
 
-                if (currentPlaylist == null) {
-                    val allSongs = playlists.find { it.name == RESERVED_PLAYLIST_NAME }
-                    currentPlaylist = allSongs
-                }
-
                 songListAdapter = SongListAdapter(
-                    currentPlaylist?.songs ?: emptyList(),
+                    currentPlaylist?.songs.orEmpty(),
                     mainViewModel.currentTrack.value,
                     ::updateCurrentTrack,
                     ::onTrackLongClick
@@ -97,12 +96,9 @@ class MainActivity : AppCompatActivity() {
                     R.id.mainFragmentContainer, MainAddPlaylistFragment()
                 ).commit()
 
-                currentPlaylistSelectFrom =
-                    currentPlaylist ?: playlists.find { it.name == RESERVED_PLAYLIST_NAME }
-
                 songListSelectableAdapter =
                     SongListSelectableAdapter(
-                        currentPlaylistSelectFrom!!.songs,
+                        currentPlaylistSelectFrom?.songs.orEmpty(),
                         null
                     )
 
@@ -144,10 +140,8 @@ class MainActivity : AppCompatActivity() {
             playlists = playlists.filter { it.name != RESERVED_PLAYLIST_NAME }.toMutableList()
             playlists.add(0, created)
 
-            if (activityState == MainActivityState.PLAY_MUSIC) {
-                currentPlaylist = created
-                changeActivityState(MainActivityState.PLAY_MUSIC)
-            }
+            currentPlaylist = created
+            changeActivityState(MainActivityState.PLAY_MUSIC)
         }
 
         setSupportActionBar(binding.toolbar)

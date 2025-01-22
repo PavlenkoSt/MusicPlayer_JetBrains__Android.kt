@@ -5,24 +5,19 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
-import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.MenuProvider
-import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import org.hyperskill.musicplayer.databinding.ActivityMainBinding
 import org.hyperskill.musicplayer.stateEnums.MainActivityState
 import org.hyperskill.musicplayer.stateEnums.TrackState
 import org.hyperskill.musicplayer.models.PlaylistModel
 import org.hyperskill.musicplayer.models.TrackModel
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var searchBtn: Button;
-    private lateinit var toolbar: androidx.appcompat.widget.Toolbar;
-    private lateinit var fragmentContainerView: FragmentContainerView
-    private lateinit var mainSongList: RecyclerView
+    private lateinit var binding: ActivityMainBinding
 
     lateinit var mainViewModel: MainViewModel
 
@@ -37,10 +32,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         mainViewModel = ViewModelProvider(this).get(MainViewModel::class.java)
 
-        setContentView(R.layout.activity_main)
         setupObservers()
         bindUI()
         changeActivityState(MainActivityState.PLAY_MUSIC)
@@ -96,8 +92,8 @@ class MainActivity : AppCompatActivity() {
                     ::onTrackLongClick
                 )
 
-                mainSongList.layoutManager = LinearLayoutManager(this)
-                mainSongList.adapter = songListAdapter
+                binding.mainSongList.layoutManager = LinearLayoutManager(this)
+                binding.mainSongList.adapter = songListAdapter
             }
 
             MainActivityState.ADD_PLAYLIST -> {
@@ -114,8 +110,8 @@ class MainActivity : AppCompatActivity() {
                         null
                     )
 
-                mainSongList.layoutManager = LinearLayoutManager(this)
-                mainSongList.adapter = songListSelectableAdapter
+                binding.mainSongList.layoutManager = LinearLayoutManager(this)
+                binding.mainSongList.adapter = songListSelectableAdapter
             }
         }
     }
@@ -137,19 +133,14 @@ class MainActivity : AppCompatActivity() {
                 newSelectedItems
             )
 
-        mainSongList.adapter = songListSelectableAdapter
+        binding.mainSongList.adapter = songListSelectableAdapter
     }
 
     private fun bindUI() {
-        searchBtn = findViewById(R.id.mainButtonSearch)
-        toolbar = findViewById(R.id.toolbar)
-        fragmentContainerView = findViewById(R.id.mainFragmentContainer)
-        mainSongList = findViewById(R.id.mainSongList)
-
-        searchBtn.setOnClickListener {
+        binding.mainButtonSearch.setOnClickListener {
             val created = PlaylistModel(RESERVED_PLAYLIST_NAME, LocalDatastore.songs)
 
-            if(activityState == MainActivityState.ADD_PLAYLIST) {
+            if (activityState == MainActivityState.ADD_PLAYLIST) {
                 updateSelectableSongListAdapter(created)
                 return@setOnClickListener
             }
@@ -163,7 +154,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        setSupportActionBar(toolbar)
+        setSupportActionBar(binding.toolbar)
         addMenuProvider(object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
                 menuInflater.inflate(R.menu.menu, menu)

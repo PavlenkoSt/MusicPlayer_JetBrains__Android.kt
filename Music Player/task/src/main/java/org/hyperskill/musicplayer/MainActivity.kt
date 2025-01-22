@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import org.hyperskill.musicplayer.databinding.ActivityMainBinding
 import org.hyperskill.musicplayer.stateEnums.MainActivityState
 import org.hyperskill.musicplayer.stateEnums.TrackState
@@ -74,37 +75,44 @@ class MainActivity : AppCompatActivity() {
     fun changeActivityState(state: MainActivityState) {
         activityState = state
 
+        val fragment = when (state) {
+            MainActivityState.PLAY_MUSIC -> MainPlayerControllerFragment()
+            MainActivityState.ADD_PLAYLIST -> MainAddPlaylistFragment()
+        }
+
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.mainFragmentContainer, fragment)
+            .commit()
+
         when (state) {
-            MainActivityState.PLAY_MUSIC -> {
-                supportFragmentManager.beginTransaction().replace(
-                    R.id.mainFragmentContainer, MainPlayerControllerFragment()
-                ).commit()
+            MainActivityState.PLAY_MUSIC -> updatePlayMusicAdapter()
+            MainActivityState.ADD_PLAYLIST -> updateAddPlaylistAdapter()
+        }
+    }
 
-                songListAdapter = SongListAdapter(
-                    currentPlaylist?.songs.orEmpty(),
-                    mainViewModel.currentTrack.value,
-                    ::updateCurrentTrack,
-                    ::onTrackLongClick
-                )
+    private fun updatePlayMusicAdapter() {
+        songListAdapter = SongListAdapter(
+            currentPlaylist?.songs ?: emptyList(),
+            mainViewModel.currentTrack.value,
+            ::updateCurrentTrack,
+            ::onTrackLongClick
+        )
+        setupAdapter(songListAdapter!!, LinearLayoutManager(this))
+    }
 
-                binding.mainSongList.layoutManager = LinearLayoutManager(this)
-                binding.mainSongList.adapter = songListAdapter
-            }
+    private fun updateAddPlaylistAdapter() {
+        val songs = currentPlaylistSelectFrom?.songs ?: emptyList()
+        songListSelectableAdapter = SongListSelectableAdapter(songs, null)
+        setupAdapter(songListSelectableAdapter!!, LinearLayoutManager(this))
+    }
 
-            MainActivityState.ADD_PLAYLIST -> {
-                supportFragmentManager.beginTransaction().replace(
-                    R.id.mainFragmentContainer, MainAddPlaylistFragment()
-                ).commit()
-
-                songListSelectableAdapter =
-                    SongListSelectableAdapter(
-                        currentPlaylistSelectFrom?.songs.orEmpty(),
-                        null
-                    )
-
-                binding.mainSongList.layoutManager = LinearLayoutManager(this)
-                binding.mainSongList.adapter = songListSelectableAdapter
-            }
+    private fun setupAdapter(
+        adapter: RecyclerView.Adapter<*>,
+        layoutManager: RecyclerView.LayoutManager
+    ) {
+        binding.mainSongList.apply {
+            this.layoutManager = layoutManager
+            this.adapter = adapter
         }
     }
 

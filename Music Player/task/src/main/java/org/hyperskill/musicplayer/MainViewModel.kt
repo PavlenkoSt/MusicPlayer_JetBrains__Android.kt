@@ -5,7 +5,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import org.hyperskill.musicplayer.models.PlaylistModel
 import org.hyperskill.musicplayer.stateEnums.TrackState
-import org.hyperskill.musicplayer.models.SongModel
 import org.hyperskill.musicplayer.models.TrackModel
 
 class MainViewModel() : ViewModel() {
@@ -26,29 +25,6 @@ class MainViewModel() : ViewModel() {
         playlists.add(0, playlist)
 
         currentPlaylist = playlist
-    }
-
-    fun updateCurrentTrackByPosition(position: Int) {
-        if (currentPlaylist == null) return
-        val track = currentPlaylist!!.songs[position]
-        updateCurrentTrack(track)
-    }
-
-    private fun updateCurrentTrack(song: SongModel) {
-        if (_currentTrack.value?.song?.id == song.id) {
-            if (currentTrack.value!!.state == TrackState.PLAYING) {
-                _currentTrack.value = _currentTrack.value?.copy(
-                    state = TrackState.PAUSED
-                )
-            } else {
-                _currentTrack.value = _currentTrack.value?.copy(
-                    state = TrackState.PLAYING
-                )
-            }
-
-        } else {
-            _currentTrack.value = TrackModel(song, TrackState.PLAYING)
-        }
     }
 
     fun setCurrentTrack(track: TrackModel) {

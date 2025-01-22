@@ -15,7 +15,7 @@ import java.util.Locale
 class SongListAdapter(
     private val dataSet: List<SongModel>,
     currentTrackParam: TrackModel?,
-    private val changeCurrentTrack: (position: Int) -> Unit,
+    private val changeCurrentTrack: (track: SongModel) -> Unit,
     private val onLongClickedItem: (position: Int) -> Unit
 ) : RecyclerView.Adapter<SongListAdapter.ViewHolder>() {
     var currentTrack: TrackModel? = null
@@ -69,7 +69,7 @@ class SongListAdapter(
         viewHolder.playPauseBtn.setOnClickListener {
             val prevTrackPosition = dataSet.indexOf(currentTrack?.song)
 
-            changeCurrentTrack(position)
+            changeCurrentTrack(dataSet[position])
 
             if (dataSet[position].id == currentTrack?.song?.id) {
                 if (currentTrack?.state == TrackState.PLAYING) {

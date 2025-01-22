@@ -1,6 +1,7 @@
 package org.hyperskill.musicplayer
 
 import android.app.AlertDialog
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -11,6 +12,7 @@ import org.hyperskill.musicplayer.databinding.ActivityMainBinding
 import org.hyperskill.musicplayer.stateEnums.MainActivityState
 import org.hyperskill.musicplayer.stateEnums.TrackState
 import org.hyperskill.musicplayer.models.PlaylistModel
+import org.hyperskill.musicplayer.models.SongModel
 import org.hyperskill.musicplayer.models.TrackModel
 
 class MainActivity : AppCompatActivity() {
@@ -37,7 +39,30 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupObservers() {
         mainViewModel.currentTrack.observe(this) { currentTrack ->
+            if (currentTrack != null &&
+                songListAdapter?.currentTrack != null &&
+                currentTrack.song.id != songListAdapter!!.currentTrack!!.song.id
+            ) {
+                songListAdapter?.currentTrack?.track?.stop()
+            }
+
             songListAdapter?.currentTrack = currentTrack
+            when (currentTrack?.state) {
+                TrackState.PLAYING -> {
+                    currentTrack.track.start()
+                }
+
+                TrackState.PAUSED -> {
+                    currentTrack.track.pause()
+                }
+
+                TrackState.STOPPED -> {
+                    currentTrack.track.pause()
+                    currentTrack.track.seekTo(0)
+                }
+
+                null -> {}
+            }
         }
     }
 
@@ -69,11 +94,32 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun onCurrentTrackClick(track: SongModel) {
+        val currentTrack = mainViewModel.currentTrack.value
+
+        if (currentTrack?.song?.id == track.id) {
+            mainViewModel.updateCurrentTrackStatus(
+                if (currentTrack.state == TrackState.PLAYING)
+                    TrackState.PAUSED
+                else
+                    TrackState.PLAYING
+            )
+        } else {
+            mainViewModel.setCurrentTrack(
+                TrackModel(
+                    track,
+                    TrackState.PLAYING,
+                    MediaPlayer.create(this, R.raw.wisdom)
+                )
+            )
+        }
+    }
+
     private fun updatePlayMusicAdapter() {
         songListAdapter = SongListAdapter(
             mainViewModel.currentPlaylist?.songs ?: emptyList(),
             mainViewModel.currentTrack.value,
-            { mainViewModel.updateCurrentTrackByPosition(it) },
+            ::onCurrentTrackClick,
             ::onTrackLongClick
         )
         setupAdapter(songListAdapter!!, LinearLayoutManager(this))
@@ -173,7 +219,8 @@ class MainActivity : AppCompatActivity() {
                         mainViewModel.setCurrentTrack(
                             TrackModel(
                                 song = mainViewModel.currentPlaylist!!.songs[0],
-                                state = TrackState.STOPPED,
+                                state = null,
+                                track = MediaPlayer.create(this, R.raw.wisdom)
                             )
                         )
                     }

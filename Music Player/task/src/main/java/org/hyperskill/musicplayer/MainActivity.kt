@@ -20,14 +20,6 @@ class MainActivity : AppCompatActivity() {
 
     private var activityState: MainActivityState = MainActivityState.PLAY_MUSIC
 
-    private var playlists = mutableListOf<PlaylistModel>()
-    private var currentPlaylistSelectFrom: PlaylistModel? = null
-    private var currentPlaylist: PlaylistModel? = null
-        set(value) {
-            currentPlaylistSelectFrom = value
-            field = value
-        }
-
     var songListAdapter: SongListAdapter? = null
     var songListSelectableAdapter: SongListSelectableAdapter? = null
 
@@ -54,21 +46,8 @@ class MainActivity : AppCompatActivity() {
         songListSelectableAdapter?.selectSongByPosition(position)
     }
 
-    private fun updateCurrentTrack(position: Int) {
-        if (currentPlaylist == null) return
-        val track = currentPlaylist!!.songs[position]
-
-        mainViewModel.updateCurrentTrack(track)
-    }
-
     fun addPlaylist(name: String, songIds: List<Int>) {
-        val allSongs = currentPlaylist ?: return
-        val songsToAdd = allSongs.songs.filter { songIds.contains(it.id) }
-
-        val newPlaylist = PlaylistModel(name, songsToAdd)
-
-        playlists.add(newPlaylist)
-
+        mainViewModel.addPlaylist(name, songIds)
         changeActivityState(MainActivityState.PLAY_MUSIC)
     }
 
@@ -92,16 +71,16 @@ class MainActivity : AppCompatActivity() {
 
     private fun updatePlayMusicAdapter() {
         songListAdapter = SongListAdapter(
-            currentPlaylist?.songs ?: emptyList(),
+            mainViewModel.currentPlaylist?.songs ?: emptyList(),
             mainViewModel.currentTrack.value,
-            ::updateCurrentTrack,
+            { mainViewModel.updateCurrentTrackByPosition(it) },
             ::onTrackLongClick
         )
         setupAdapter(songListAdapter!!, LinearLayoutManager(this))
     }
 
     private fun updateAddPlaylistAdapter() {
-        val songs = currentPlaylistSelectFrom?.songs ?: emptyList()
+        val songs = mainViewModel.currentPlaylistSelectFrom?.songs ?: emptyList()
         songListSelectableAdapter = SongListSelectableAdapter(songs, null)
         setupAdapter(songListSelectableAdapter!!, LinearLayoutManager(this))
     }
@@ -117,19 +96,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateSelectableSongListAdapter(playlist: PlaylistModel?) {
-        currentPlaylistSelectFrom = playlist
+        mainViewModel.updateCurrentPlaylistSelectFrom(playlist)
 
         val savedSelectedItems =
             songListSelectableAdapter?.selectedTrackIds.orEmpty()
         val newSelectedItems =
-            currentPlaylistSelectFrom?.songs
+            mainViewModel.currentPlaylistSelectFrom?.songs
                 ?.filter { savedSelectedItems.contains(it.id) }
                 .orEmpty()
                 .map { it.id }
 
         songListSelectableAdapter =
             SongListSelectableAdapter(
-                currentPlaylistSelectFrom!!.songs,
+                mainViewModel.currentPlaylistSelectFrom?.songs.orEmpty(),
                 newSelectedItems
             )
 
@@ -145,10 +124,7 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            playlists = playlists.filter { it.name != RESERVED_PLAYLIST_NAME }.toMutableList()
-            playlists.add(0, created)
-
-            currentPlaylist = created
+            mainViewModel.setReservedPlaylist(created)
             changeActivityState(MainActivityState.PLAY_MUSIC)
         }
 
@@ -163,7 +139,7 @@ class MainActivity : AppCompatActivity() {
     fun handleAddPlaylistMenuClick() {
         if (activityState == MainActivityState.ADD_PLAYLIST) return
 
-        if (playlists.isEmpty()) {
+        if (mainViewModel.playlists.isEmpty()) {
             Toast.makeText(
                 this@MainActivity,
                 "no songs loaded, click search to load songs",
@@ -177,26 +153,26 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun handleLoadPlaylistMenuClick() {
-        val items = playlists.map { it.name }.toTypedArray()
+        val items = mainViewModel.playlists.map { it.name }.toTypedArray()
 
         AlertDialog.Builder(this@MainActivity)
             .setTitle("choose playlist to load")
             .setItems(items, { dialog, idx ->
-                val playlistPressedTo = playlists[idx]
+                val playlistPressedTo = mainViewModel.playlists[idx]
 
                 if (activityState == MainActivityState.ADD_PLAYLIST) {
                     updateSelectableSongListAdapter(playlistPressedTo)
                 } else {
-                    currentPlaylist = playlistPressedTo
+                    mainViewModel.updateCurrentPlaylist(playlistPressedTo)
 
                     if (mainViewModel.currentTrack.value == null
-                        || !currentPlaylist!!.songs.contains(
+                        || !mainViewModel.currentPlaylist?.songs.orEmpty().contains(
                             mainViewModel.currentTrack.value?.song
                         )
                     ) {
                         mainViewModel.setCurrentTrack(
                             TrackModel(
-                                song = currentPlaylist!!.songs[0],
+                                song = mainViewModel.currentPlaylist!!.songs[0],
                                 state = TrackState.STOPPED,
                             )
                         )
@@ -213,7 +189,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun handleDeletePlaylistMenuClick() {
-        val items = playlists.filter { it.name != RESERVED_PLAYLIST_NAME }
+        val items = mainViewModel.playlists.filter { it.name != RESERVED_PLAYLIST_NAME }
             .map { it.name }
             .toTypedArray()
 
@@ -221,13 +197,14 @@ class MainActivity : AppCompatActivity() {
             .setTitle("choose playlist to delete")
             .setItems(items,
                 { dialog, idx ->
-                    if (activityState == MainActivityState.ADD_PLAYLIST || currentPlaylist?.name == playlists[idx + 1].name) {
-                        currentPlaylist = playlists.first() // All Songs
+                    if (activityState == MainActivityState.ADD_PLAYLIST
+                        || mainViewModel.currentPlaylist?.name == mainViewModel.playlists[idx + 1].name
+                    ) {
+                        mainViewModel.makeReservedPlaylistCurrent()
                         changeActivityState(activityState)
                     }
 
-                    playlists.remove(playlists[idx + 1])
-
+                    mainViewModel.deletePlaylist(mainViewModel.playlists[idx + 1])
                     dialog.dismiss()
                 }
             )

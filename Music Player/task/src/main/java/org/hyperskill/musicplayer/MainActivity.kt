@@ -53,6 +53,11 @@ class MainActivity : AppCompatActivity() {
 
             mainPlayerControllerFragment?.setTrackProgress(currentTrack?.track?.duration ?: 0)
 
+            currentTrack?.track?.setOnCompletionListener {
+                mainViewModel.updateCurrentTrackStatus(TrackState.STOPPED)
+                songListAdapter?.notifyDataSetChanged()
+            }
+
             when (currentTrack?.state) {
                 TrackState.PLAYING -> {
                     currentTrack.track.start()

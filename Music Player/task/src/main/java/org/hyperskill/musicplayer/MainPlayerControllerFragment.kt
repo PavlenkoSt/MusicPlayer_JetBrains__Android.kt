@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.SeekBar
+import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import org.hyperskill.musicplayer.stateEnums.TrackState
@@ -36,6 +37,27 @@ class MainPlayerControllerFragment : Fragment() {
         val mainActivity = (activity as MainActivity)
 
         handler = Handler(mainActivity.mainLooper)
+
+        controllerSeekBar?.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
+            override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
+                controllerTvCurrentTime?.text = formatter.format(p1)
+            }
+
+            override fun onStartTrackingTouch(p0: SeekBar?) {
+                val track = mainActivity.mainViewModel.currentTrack.value
+                if (track?.state == TrackState.PLAYING) {
+                    stopSeekBarTracking()
+                }
+            }
+
+            override fun onStopTrackingTouch(seeker: SeekBar) {
+                val track = mainActivity.mainViewModel.currentTrack.value
+                track?.track?.seekTo(seeker.progress)
+                if (track?.state == TrackState.PLAYING) {
+                    updateSeekBar(track.track)
+                }
+            }
+        })
 
         playPauseBtn.setOnClickListener {
             val currentTrack =

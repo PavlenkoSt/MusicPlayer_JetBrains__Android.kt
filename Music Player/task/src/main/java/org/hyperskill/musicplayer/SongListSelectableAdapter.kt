@@ -8,8 +8,6 @@ import android.widget.CheckBox
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import org.hyperskill.musicplayer.models.SongModel
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 class SongListSelectableAdapter(
     private val dataSet: List<SongModel>,
@@ -47,7 +45,6 @@ class SongListSelectableAdapter(
     override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
         viewHolder.artistTv.text = dataSet[position].artist
         viewHolder.titleTv.text = dataSet[position].title
-        val formatter = SimpleDateFormat("mm:ss", Locale.getDefault())
         viewHolder.durationTv.text = formatter.format(dataSet[position].duration)
 
         val id = dataSet[position].id

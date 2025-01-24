@@ -18,6 +18,9 @@ import org.hyperskill.musicplayer.models.TrackModel
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
+    private var mainPlayerControllerFragment: MainPlayerControllerFragment? = null
+    private var mainAddPlaylistFragment: MainAddPlaylistFragment? = null
+
     lateinit var mainViewModel: MainViewModel
 
     private var activityState: MainActivityState = MainActivityState.PLAY_MUSIC
@@ -47,18 +50,25 @@ class MainActivity : AppCompatActivity() {
             }
 
             songListAdapter?.currentTrack = currentTrack
+
+            mainPlayerControllerFragment?.setTrackProgress(currentTrack?.track?.duration ?: 0)
+
             when (currentTrack?.state) {
                 TrackState.PLAYING -> {
                     currentTrack.track.start()
+                    mainPlayerControllerFragment?.updateSeekBar(currentTrack.track)
                 }
 
                 TrackState.PAUSED -> {
                     currentTrack.track.pause()
+                    mainPlayerControllerFragment?.stopSeekBarTracking()
                 }
 
                 TrackState.STOPPED -> {
                     currentTrack.track.pause()
                     currentTrack.track.seekTo(0)
+                    mainPlayerControllerFragment?.resetTrackProgress()
+                    mainPlayerControllerFragment?.stopSeekBarTracking()
                 }
 
                 null -> {}
@@ -80,9 +90,23 @@ class MainActivity : AppCompatActivity() {
         activityState = state
 
         val fragment = when (state) {
-            MainActivityState.PLAY_MUSIC -> MainPlayerControllerFragment()
-            MainActivityState.ADD_PLAYLIST -> MainAddPlaylistFragment()
+            MainActivityState.PLAY_MUSIC -> {
+                if (mainPlayerControllerFragment == null) {
+                    mainPlayerControllerFragment = MainPlayerControllerFragment()
+                }
+
+                mainPlayerControllerFragment
+            }
+
+            MainActivityState.ADD_PLAYLIST -> {
+                if (mainAddPlaylistFragment == null) {
+                    mainAddPlaylistFragment = MainAddPlaylistFragment()
+                }
+                mainAddPlaylistFragment
+            }
         }
+
+        if (fragment == null) return
 
         supportFragmentManager.beginTransaction()
             .replace(R.id.mainFragmentContainer, fragment)

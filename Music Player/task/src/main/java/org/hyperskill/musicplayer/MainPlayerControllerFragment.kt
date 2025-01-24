@@ -38,6 +38,8 @@ class MainPlayerControllerFragment : Fragment() {
 
         handler = Handler(mainActivity.mainLooper)
 
+        setInitialData()
+
         controllerSeekBar?.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
             override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
                 controllerTvCurrentTime?.text = formatter.format(p1)
@@ -78,6 +80,12 @@ class MainPlayerControllerFragment : Fragment() {
         }
 
         return view
+    }
+
+    private fun setInitialData() {
+        val mainActivity = (activity as MainActivity)
+        val currentTrack = mainActivity.mainViewModel.currentTrack.value ?: return
+        setTrackProgress(currentTrack.track.duration)
     }
 
     fun setTrackProgress(duration: Int) {

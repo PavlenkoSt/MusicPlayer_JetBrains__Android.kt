@@ -48,8 +48,8 @@ class MainActivity : AppCompatActivity() {
             ) {
                 val old = songListAdapter?.currentTrack
                 if (old != null) {
-                    old.track.stop()
                     stopTrack(old)
+                    old.track.release()
                 }
             }
 
@@ -60,9 +60,13 @@ class MainActivity : AppCompatActivity() {
                 mainPlayerControllerFragment?.setTrackProgress(duration)
             }
 
-            currentTrack?.track?.setOnCompletionListener {
-                mainViewModel.updateCurrentTrackStatus(TrackState.STOPPED)
-                songListAdapter?.notifyDataSetChanged()
+
+            currentTrack?.track?.apply {
+                setOnCompletionListener(null)
+                setOnCompletionListener {
+                    mainViewModel.updateCurrentTrackStatus(TrackState.STOPPED)
+                    songListAdapter?.notifyDataSetChanged()
+                }
             }
 
             when (currentTrack?.state) {

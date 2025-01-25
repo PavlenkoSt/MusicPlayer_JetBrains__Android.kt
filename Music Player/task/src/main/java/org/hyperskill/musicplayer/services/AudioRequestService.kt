@@ -1,8 +1,10 @@
 package org.hyperskill.musicplayer.services
 
 import android.content.ContentResolver
+import android.content.ContentUris
 import android.content.Context
 import android.database.Cursor
+import android.net.Uri
 import android.provider.MediaStore
 import org.hyperskill.musicplayer.models.SongModel
 
@@ -49,5 +51,9 @@ object AudioRequestService {
         }
 
         return audioFiles
+    }
+
+    fun getUriBySongId(id: Long): Uri {
+        return ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id)
     }
 }

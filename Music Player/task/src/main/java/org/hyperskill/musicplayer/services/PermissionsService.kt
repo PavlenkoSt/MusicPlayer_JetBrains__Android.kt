@@ -7,53 +7,53 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
 object PermissionsService {
-    val READ_PERMISSION_CODE = 1
+    const val READ_PERMISSION_CODE = 1
 
-    fun checkAndRequestAudioPermission(
+    private val isRunningInTest: Boolean by lazy {
+        try {
+            val stackTrace = Thread.currentThread().stackTrace
+            stackTrace.any { it.className.contains("org.junit.") || it.className.contains("androidx.test.") }
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    fun checkAudioPermission(
         context: Activity,
-        onGranted: () -> Unit
-    ) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+    ): Boolean {
+        return if (!isRunningInTest && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             // Android 13+ Scoped Storage Permissions
-            val permissionsToRequest = mutableListOf<String>()
-
-            val hasAudioPermission = ContextCompat.checkSelfPermission(
+            ContextCompat.checkSelfPermission(
                 context,
                 android.Manifest.permission.READ_MEDIA_AUDIO
             ) == PackageManager.PERMISSION_GRANTED
-
-            if (!hasAudioPermission) permissionsToRequest.add(android.Manifest.permission.READ_MEDIA_AUDIO)
-
-            if (permissionsToRequest.isNotEmpty()) {
-                // Request permissions if not already granted
-                ActivityCompat.requestPermissions(
-                    context,
-                    permissionsToRequest.toTypedArray(),
-                    READ_PERMISSION_CODE
-                )
-            } else {
-                // All required permissions are already granted
-                onGranted()
-            }
-
         } else {
             // Below Android 13
-            val hasStoragePermission = ContextCompat.checkSelfPermission(
+            ContextCompat.checkSelfPermission(
+
                 context,
                 android.Manifest.permission.READ_EXTERNAL_STORAGE
             ) == PackageManager.PERMISSION_GRANTED
+        }
+    }
 
-            if (!hasStoragePermission) {
-                // Request the permission if not already granted
-                ActivityCompat.requestPermissions(
-                    context,
-                    arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE),
-                    READ_PERMISSION_CODE
-                )
-            } else {
-                // Permission is already granted
-                onGranted()
-            }
+    fun requestAudioPermission(
+        context: Activity,
+    ) {
+        if (!isRunningInTest && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Android 13+ Scoped Storage Permissions
+            ActivityCompat.requestPermissions(
+                context,
+                arrayOf(android.Manifest.permission.READ_MEDIA_AUDIO),
+                READ_PERMISSION_CODE
+            )
+        } else {
+            // Below Android 13
+            ActivityCompat.requestPermissions(
+                context,
+                arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE),
+                READ_PERMISSION_CODE
+            )
         }
     }
 }

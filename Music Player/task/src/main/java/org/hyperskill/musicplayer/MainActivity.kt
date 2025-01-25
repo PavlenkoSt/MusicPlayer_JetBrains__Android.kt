@@ -162,7 +162,7 @@ class MainActivity : AppCompatActivity() {
                 TrackModel(
                     track,
                     TrackState.PLAYING,
-                    MediaPlayer.create(this, R.raw.wisdom)
+                    MediaPlayer.create(this, AudioRequestService.getUriBySongId(track.id))
                 )
             )
         }
@@ -216,10 +216,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun bindUI() {
         binding.mainButtonSearch.setOnClickListener {
-            PermissionsService.checkAndRequestAudioPermission(
-                this,
-                ::setReservedPlaylist
-            )
+            if (PermissionsService.checkAudioPermission(this)) {
+                setReservedPlaylist()
+            } else {
+                PermissionsService.requestAudioPermission(this)
+            }
         }
         setSupportActionBar(binding.toolbar)
         addMenuProvider(MainMenuProvider(this))
@@ -315,11 +316,15 @@ class MainActivity : AppCompatActivity() {
                             mainViewModel.currentTrack.value?.song
                         )
                     ) {
+                        val defaultSong = mainViewModel.currentPlaylist!!.songs[0]
                         mainViewModel.setCurrentTrack(
                             TrackModel(
-                                song = mainViewModel.currentPlaylist!!.songs[0],
+                                song = defaultSong,
                                 state = TrackState.STOPPED,
-                                track = MediaPlayer.create(this, R.raw.wisdom)
+                                track = MediaPlayer.create(
+                                    this,
+                                    AudioRequestService.getUriBySongId(defaultSong.id)
+                                )
                             )
                         )
                     }

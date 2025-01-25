@@ -42,7 +42,7 @@ class MainPlayerControllerFragment : Fragment() {
 
         controllerSeekBar?.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
             override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-                controllerTvCurrentTime?.text = formatter.format(p1)
+                controllerTvCurrentTime?.text = formatter.format(p1 * 1000)
             }
 
             override fun onStartTrackingTouch(p0: SeekBar?) {
@@ -54,7 +54,7 @@ class MainPlayerControllerFragment : Fragment() {
 
             override fun onStopTrackingTouch(seeker: SeekBar) {
                 val track = mainActivity.mainViewModel.currentTrack.value
-                track?.track?.seekTo(seeker.progress)
+                track?.track?.seekTo(seeker.progress * 1000)
                 if (track?.state == TrackState.PLAYING) {
                     updateSeekBar(track.track)
                 }
@@ -89,7 +89,7 @@ class MainPlayerControllerFragment : Fragment() {
     }
 
     fun setTrackProgress(duration: Int) {
-        controllerSeekBar?.max = duration
+        controllerSeekBar?.max = duration / 1000
         controllerTvTotalTime?.text = formatter.format(duration)
     }
 
@@ -103,7 +103,7 @@ class MainPlayerControllerFragment : Fragment() {
             override fun run() {
                 if (mediaPlayer.isPlaying) {
                     val currentPosition = mediaPlayer.currentPosition
-                    controllerSeekBar?.progress = currentPosition
+                    controllerSeekBar?.progress = if(currentPosition <= 0) 0 else currentPosition / 1000
                     controllerTvCurrentTime?.text = formatter.format(currentPosition)
 
                     handler.postDelayed(this, updateInterval)

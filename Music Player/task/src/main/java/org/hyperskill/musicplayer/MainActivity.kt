@@ -46,12 +46,19 @@ class MainActivity : AppCompatActivity() {
                 songListAdapter?.currentTrack != null &&
                 currentTrack.song.id != songListAdapter!!.currentTrack!!.song.id
             ) {
-                songListAdapter?.currentTrack?.track?.stop()
+                val old = songListAdapter?.currentTrack
+                if (old != null) {
+                    old.track.stop()
+                    stopTrack(old)
+                }
             }
 
             songListAdapter?.currentTrack = currentTrack
+            val duration = currentTrack?.track?.duration
 
-            mainPlayerControllerFragment?.setTrackProgress(currentTrack?.track?.duration ?: 0)
+            if (duration != null && duration >= 0) {
+                mainPlayerControllerFragment?.setTrackProgress(duration)
+            }
 
             currentTrack?.track?.setOnCompletionListener {
                 mainViewModel.updateCurrentTrackStatus(TrackState.STOPPED)
@@ -70,15 +77,21 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 TrackState.STOPPED -> {
-                    currentTrack.track.pause()
-                    currentTrack.track.seekTo(0)
-                    mainPlayerControllerFragment?.resetTrackProgress()
-                    mainPlayerControllerFragment?.stopSeekBarTracking()
+                    stopTrack(currentTrack)
                 }
 
                 null -> {}
             }
         }
+    }
+
+    private fun stopTrack(currentTrack: TrackModel) {
+        if (currentTrack.track.isPlaying) {
+            currentTrack.track.pause()
+        }
+        currentTrack.track.seekTo(0)
+        mainPlayerControllerFragment?.resetTrackProgress()
+        mainPlayerControllerFragment?.stopSeekBarTracking()
     }
 
     private fun onTrackLongClick(position: Int) {
@@ -248,7 +261,7 @@ class MainActivity : AppCompatActivity() {
                         mainViewModel.setCurrentTrack(
                             TrackModel(
                                 song = mainViewModel.currentPlaylist!!.songs[0],
-                                state = null,
+                                state = TrackState.STOPPED,
                                 track = MediaPlayer.create(this, R.raw.wisdom)
                             )
                         )

@@ -1,4 +1,4 @@
-package org.hyperskill.musicplayer.stateEnums
+package org.hyperskill.musicplayer.enums
 
 enum class TrackState {
     PLAYING,

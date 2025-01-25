@@ -4,7 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import org.hyperskill.musicplayer.models.PlaylistModel
-import org.hyperskill.musicplayer.stateEnums.TrackState
+import org.hyperskill.musicplayer.enums.TrackState
 import org.hyperskill.musicplayer.models.TrackModel
 
 class MainViewModel() : ViewModel() {
@@ -37,7 +37,7 @@ class MainViewModel() : ViewModel() {
         )
     }
 
-    fun addPlaylist(name: String, songIds: List<Int>) {
+    fun addPlaylist(name: String, songIds: List<Long>) {
         val allSongs = currentPlaylist ?: return
         val songsToAdd = allSongs.songs.filter { songIds.contains(it.id) }
 

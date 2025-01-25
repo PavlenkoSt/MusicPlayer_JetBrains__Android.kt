@@ -1,4 +1,4 @@
-package org.hyperskill.musicplayer
+package org.hyperskill.musicplayer.adapters
 
 import android.view.LayoutInflater
 import android.view.View
@@ -6,9 +6,10 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import org.hyperskill.musicplayer.R
 import org.hyperskill.musicplayer.models.SongModel
 import org.hyperskill.musicplayer.models.TrackModel
-import org.hyperskill.musicplayer.stateEnums.TrackState
+import org.hyperskill.musicplayer.enums.TrackState
 import java.text.SimpleDateFormat
 import java.util.Locale
 

@@ -1,6 +1,7 @@
 package org.hyperskill.musicplayer
 
 import android.app.AlertDialog
+import android.content.pm.PackageManager
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.widget.Toast
@@ -8,12 +9,18 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import org.hyperskill.musicplayer.adapters.SongListAdapter
+import org.hyperskill.musicplayer.adapters.SongListSelectableAdapter
 import org.hyperskill.musicplayer.databinding.ActivityMainBinding
-import org.hyperskill.musicplayer.stateEnums.MainActivityState
-import org.hyperskill.musicplayer.stateEnums.TrackState
+import org.hyperskill.musicplayer.fragments.MainAddPlaylistFragment
+import org.hyperskill.musicplayer.fragments.MainPlayerControllerFragment
+import org.hyperskill.musicplayer.enums.MainActivityState
+import org.hyperskill.musicplayer.enums.TrackState
 import org.hyperskill.musicplayer.models.PlaylistModel
 import org.hyperskill.musicplayer.models.SongModel
 import org.hyperskill.musicplayer.models.TrackModel
+import org.hyperskill.musicplayer.services.AudioRequestService
+import org.hyperskill.musicplayer.services.PermissionsService
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -103,7 +110,7 @@ class MainActivity : AppCompatActivity() {
         songListSelectableAdapter?.selectSongByPosition(position)
     }
 
-    fun addPlaylist(name: String, songIds: List<Int>) {
+    fun addPlaylist(name: String, songIds: List<Long>) {
         mainViewModel.addPlaylist(name, songIds)
         changeActivityState(MainActivityState.PLAY_MUSIC)
     }
@@ -209,27 +216,57 @@ class MainActivity : AppCompatActivity() {
 
     private fun bindUI() {
         binding.mainButtonSearch.setOnClickListener {
-            val created = PlaylistModel(RESERVED_PLAYLIST_NAME, LocalDatastore.songs)
-
-            if (activityState == MainActivityState.ADD_PLAYLIST) {
-                updateSelectableSongListAdapter(created)
-                return@setOnClickListener
-            }
-
-            mainViewModel.setReservedPlaylist(created)
-            mainViewModel.setCurrentTrack(
-                TrackModel(
-                    song = created.songs[0],
-                    state = TrackState.STOPPED,
-                    track = MediaPlayer.create(this, R.raw.wisdom)
-                )
+            PermissionsService.checkAndRequestAudioPermission(
+                this,
+                ::setReservedPlaylist
             )
-
-            changeActivityState(MainActivityState.PLAY_MUSIC)
         }
-
         setSupportActionBar(binding.toolbar)
         addMenuProvider(MainMenuProvider(this))
+    }
+
+    private fun setReservedPlaylist() {
+        val songs = AudioRequestService.getAudioFiles(this)
+
+        if (songs.isEmpty()) {
+            Toast.makeText(this, "no songs found", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        val created = PlaylistModel(RESERVED_PLAYLIST_NAME, songs)
+
+        if (activityState == MainActivityState.ADD_PLAYLIST) {
+            updateSelectableSongListAdapter(created)
+            return
+        }
+
+        mainViewModel.setReservedPlaylist(created)
+        mainViewModel.setCurrentTrack(
+            TrackModel(
+                song = created.songs[0],
+                state = TrackState.STOPPED,
+                track = MediaPlayer.create(this, R.raw.wisdom)
+            )
+        )
+
+        changeActivityState(MainActivityState.PLAY_MUSIC)
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode == PermissionsService.READ_PERMISSION_CODE) {
+            if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+                setReservedPlaylist()
+            } else {
+                Toast.makeText(this, "Songs cannot be loaded without permission", Toast.LENGTH_LONG)
+                    .show()
+            }
+        }
     }
 
     /*

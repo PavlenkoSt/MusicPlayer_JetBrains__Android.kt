@@ -1,4 +1,4 @@
-package org.hyperskill.musicplayer
+package org.hyperskill.musicplayer.fragments
 
 import android.media.MediaPlayer
 import android.os.Bundle
@@ -11,7 +11,10 @@ import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import org.hyperskill.musicplayer.stateEnums.TrackState
+import org.hyperskill.musicplayer.MainActivity
+import org.hyperskill.musicplayer.R
+import org.hyperskill.musicplayer.formatter
+import org.hyperskill.musicplayer.enums.TrackState
 
 class MainPlayerControllerFragment : Fragment() {
     lateinit var handler: Handler

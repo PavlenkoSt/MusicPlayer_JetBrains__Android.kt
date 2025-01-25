@@ -1,4 +1,4 @@
-package org.hyperskill.musicplayer
+package org.hyperskill.musicplayer.adapters
 
 import android.graphics.Color
 import android.view.LayoutInflater
@@ -7,13 +7,15 @@ import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import org.hyperskill.musicplayer.R
+import org.hyperskill.musicplayer.formatter
 import org.hyperskill.musicplayer.models.SongModel
 
 class SongListSelectableAdapter(
     private val dataSet: List<SongModel>,
-    initialPositions: List<Int>?
+    initialPositions: List<Long>?
 ) : RecyclerView.Adapter<SongListSelectableAdapter.ViewHolder>() {
-    var selectedTrackIds = mutableListOf<Int>()
+    var selectedTrackIds = mutableListOf<Long>()
 
     init {
         if(initialPositions != null) {

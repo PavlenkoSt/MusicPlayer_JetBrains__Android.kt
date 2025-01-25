@@ -241,13 +241,21 @@ class MainActivity : AppCompatActivity() {
         }
 
         mainViewModel.setReservedPlaylist(created)
-        mainViewModel.setCurrentTrack(
-            TrackModel(
-                song = created.songs[0],
-                state = TrackState.STOPPED,
-                track = MediaPlayer.create(this, R.raw.wisdom)
+
+        if(!songs.contains(mainViewModel.currentTrack.value?.song))  {
+            val defaultTrack = songs[0]
+
+            mainViewModel.setCurrentTrack(
+                TrackModel(
+                    song = defaultTrack,
+                    state = TrackState.STOPPED,
+                    track = MediaPlayer.create(
+                        this,
+                        AudioRequestService.getUriBySongId(defaultTrack.id)
+                    )
+                )
             )
-        )
+        }
 
         changeActivityState(MainActivityState.PLAY_MUSIC)
     }

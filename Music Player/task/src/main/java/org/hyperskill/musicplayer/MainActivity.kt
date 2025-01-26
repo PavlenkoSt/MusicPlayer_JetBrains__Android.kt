@@ -44,12 +44,16 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val playlistDbService = PlaylistDbService.getInstance(this)
+        val playlistDbService = PlaylistDbService(this)
         val factory = MainViewModelFactory(playlistDbService)
         mainViewModel = ViewModelProvider(this, factory).get(MainViewModel::class.java)
 
         setupObservers()
         bindUI()
+
+        runBlocking {
+            setupPlaylistsFromDb()
+        }
 
         changeActivityState(MainActivityState.PLAY_MUSIC)
     }
@@ -315,22 +319,34 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun handleLoadPlaylistMenuClick() {
-        runBlocking {
-            if (mainViewModel.playlists.isEmpty()) {
-                setupPlaylistsFromDb()
-            }
+        val playlistLabels = mainViewModel.playlists.map { it.name }.toMutableList()
+
+        if(!playlistLabels.contains(RESERVED_PLAYLIST_NAME)) {
+            playlistLabels.add(0, RESERVED_PLAYLIST_NAME)
         }
 
-        val items = mainViewModel.playlists.map { it.name }.toTypedArray()
+        val items = playlistLabels.toTypedArray()
 
         AlertDialog.Builder(this@MainActivity)
             .setTitle("choose playlist to load")
             .setItems(items, { dialog, idx ->
-                val playlistPressedTo = mainViewModel.playlists[idx]
-
                 if (mainViewModel.songs.isEmpty()) {
-                    setReservedPlaylist()
+                    val songs = AudioRequestService.getAudioFiles(this)
+
+                    if (songs.isEmpty()) return@setItems
+
+                    val created = PlaylistModel(RESERVED_PLAYLIST_NAME, songs.map { it.id })
+
+                    if (activityState == MainActivityState.ADD_PLAYLIST) {
+                        updateSelectableSongListAdapter(created)
+                        return@setItems
+                    }
+
+                    mainViewModel.setAllSongs(songs)
+                    mainViewModel.setReservedPlaylist(created)
                 }
+
+                val playlistPressedTo = mainViewModel.playlists[idx]
 
                 if (activityState == MainActivityState.ADD_PLAYLIST) {
                     updateSelectableSongListAdapter(playlistPressedTo)
@@ -381,7 +397,9 @@ class MainActivity : AppCompatActivity() {
                         changeActivityState(activityState)
                     }
 
-                    mainViewModel.deletePlaylist(mainViewModel.playlists[idx + 1])
+                    runBlocking {
+                        mainViewModel.deletePlaylist(mainViewModel.playlists[idx + 1])
+                    }
                     dialog.dismiss()
                 }
             )

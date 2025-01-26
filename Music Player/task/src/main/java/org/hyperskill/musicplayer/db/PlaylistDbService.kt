@@ -2,34 +2,25 @@ package org.hyperskill.musicplayer.db
 
 import android.content.ContentValues
 import android.content.Context
+import androidx.core.database.sqlite.transaction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class PlaylistDbService(context: Context) {
     private val dbHelper = MusicPlayerDbHelper(context)
 
-    companion object {
-        @Volatile
-        private var instance: PlaylistDbService? = null
-
-        fun getInstance(context: Context): PlaylistDbService {
-            return instance ?: synchronized(this) {
-                instance ?: PlaylistDbService(context).also { instance = it }
-            }
-        }
-    }
-
     suspend fun insertPlaylist(playlistName: String, songIds: List<Long>) {
         withContext(Dispatchers.IO) {
             val db = dbHelper.writableDatabase
+            db.transaction {
+                songIds.forEach {
+                    val values = ContentValues().apply {
+                        put(MusicPlayerContract.Playlist.COLUMN_NAME_PLAYLIST_NAME, playlistName)
+                        put(MusicPlayerContract.Playlist.COLUMN_NAME_SONG_ID, it)
+                    }
 
-            songIds.forEach {
-                val values = ContentValues().apply {
-                    put(MusicPlayerContract.Playlist.COLUMN_NAME_PLAYLIST_NAME, playlistName)
-                    put(MusicPlayerContract.Playlist.COLUMN_NAME_SONG_ID, it)
+                    db.insert(MusicPlayerContract.Playlist.TABLE_NAME, null, values)
                 }
-
-                db.insert(MusicPlayerContract.Playlist.TABLE_NAME, null, values)
             }
         }
     }

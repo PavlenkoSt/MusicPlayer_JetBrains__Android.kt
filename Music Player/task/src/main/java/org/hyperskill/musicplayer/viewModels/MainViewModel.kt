@@ -1,10 +1,12 @@
 package org.hyperskill.musicplayer.viewModels
 
+import android.annotation.SuppressLint
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.hyperskill.musicplayer.RESERVED_PLAYLIST_NAME
 import org.hyperskill.musicplayer.db.PlaylistDbService
 import org.hyperskill.musicplayer.models.PlaylistModel
@@ -67,6 +69,7 @@ class MainViewModel(
         )
     }
 
+    @SuppressLint("NewApi")
     fun addPlaylist(name: String, songIds: List<Long>, skipDbInsert: Boolean) {
         val newPlaylist = PlaylistModel(name, songIds)
 
@@ -74,10 +77,13 @@ class MainViewModel(
             val alreadyExistsPlaylist = playlists.find { it.name == name }
 
             if (alreadyExistsPlaylist != null) {
-                deletePlaylist(alreadyExistsPlaylist)
+               runBlocking {
+                   deletePlaylist(alreadyExistsPlaylist)
+               }
             }
         }
 
+        playlists.removeIf { it.name == name }
         playlists.add(newPlaylist)
 
         if (!skipDbInsert) {
@@ -88,11 +94,9 @@ class MainViewModel(
 
     }
 
-    fun deletePlaylist(playlist: PlaylistModel) {
+    suspend fun deletePlaylist(playlist: PlaylistModel) {
         playlists.remove(playlist)
-        viewModelScope.launch {
-            playlistDbService.deletePlaylist(playlist.name)
-        }
+        playlistDbService.deletePlaylist(playlist.name)
     }
 
     fun makeReservedPlaylistCurrent() {

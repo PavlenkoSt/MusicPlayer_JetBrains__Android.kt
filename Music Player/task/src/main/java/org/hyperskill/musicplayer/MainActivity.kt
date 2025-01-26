@@ -9,9 +9,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.runBlocking
 import org.hyperskill.musicplayer.adapters.SongListAdapter
 import org.hyperskill.musicplayer.adapters.SongListSelectableAdapter
 import org.hyperskill.musicplayer.databinding.ActivityMainBinding
+import org.hyperskill.musicplayer.db.PlaylistDbService
 import org.hyperskill.musicplayer.fragments.MainAddPlaylistFragment
 import org.hyperskill.musicplayer.fragments.MainPlayerControllerFragment
 import org.hyperskill.musicplayer.enums.MainActivityState
@@ -21,6 +23,8 @@ import org.hyperskill.musicplayer.models.SongModel
 import org.hyperskill.musicplayer.models.TrackModel
 import org.hyperskill.musicplayer.services.AudioRequestService
 import org.hyperskill.musicplayer.services.PermissionsService
+import org.hyperskill.musicplayer.viewModels.MainViewModel
+import org.hyperskill.musicplayer.viewModels.MainViewModelFactory
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -40,10 +44,13 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        mainViewModel = ViewModelProvider(this).get(MainViewModel::class.java)
+        val playlistDbService = PlaylistDbService.getInstance(this)
+        val factory = MainViewModelFactory(playlistDbService)
+        mainViewModel = ViewModelProvider(this, factory).get(MainViewModel::class.java)
 
         setupObservers()
         bindUI()
+
         changeActivityState(MainActivityState.PLAY_MUSIC)
     }
 
@@ -96,6 +103,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private suspend fun setupPlaylistsFromDb() {
+        val playlistsFromDb = mainViewModel.getInitialPlaylists()
+
+        playlistsFromDb.forEach {
+            mainViewModel.addPlaylist(it.key, it.value.map { id -> id.toLong() }, true)
+        }
+    }
+
     private fun stopTrack(currentTrack: TrackModel) {
         if (currentTrack.track.isPlaying) {
             currentTrack.track.pause()
@@ -111,7 +126,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun addPlaylist(name: String, songIds: List<Long>) {
-        mainViewModel.addPlaylist(name, songIds)
+        mainViewModel.addPlaylist(name, songIds, false)
         changeActivityState(MainActivityState.PLAY_MUSIC)
     }
 
@@ -170,7 +185,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun updatePlayMusicAdapter() {
         songListAdapter = SongListAdapter(
-            mainViewModel.currentPlaylist?.songs ?: emptyList(),
+            mainViewModel.currentPlaylistSongs,
             mainViewModel.currentTrack.value,
             ::onCurrentTrackClick,
             ::onTrackLongClick
@@ -179,7 +194,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateAddPlaylistAdapter() {
-        val songs = mainViewModel.currentPlaylistSelectFrom?.songs ?: emptyList()
+        val songs = mainViewModel.currentPlaylistSelectFromSongs
         songListSelectableAdapter = SongListSelectableAdapter(songs, null)
         setupAdapter(songListSelectableAdapter!!, LinearLayoutManager(this))
     }
@@ -200,14 +215,13 @@ class MainActivity : AppCompatActivity() {
         val savedSelectedItems =
             songListSelectableAdapter?.selectedTrackIds.orEmpty()
         val newSelectedItems =
-            mainViewModel.currentPlaylistSelectFrom?.songs
-                ?.filter { savedSelectedItems.contains(it.id) }
-                .orEmpty()
+            mainViewModel.currentPlaylistSelectFromSongs
+                .filter { savedSelectedItems.contains(it.id) }
                 .map { it.id }
 
         songListSelectableAdapter =
             SongListSelectableAdapter(
-                mainViewModel.currentPlaylistSelectFrom?.songs.orEmpty(),
+                mainViewModel.currentPlaylistSelectFromSongs,
                 newSelectedItems
             )
 
@@ -234,16 +248,17 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        val created = PlaylistModel(RESERVED_PLAYLIST_NAME, songs)
+        val created = PlaylistModel(RESERVED_PLAYLIST_NAME, songs.map { it.id })
 
         if (activityState == MainActivityState.ADD_PLAYLIST) {
             updateSelectableSongListAdapter(created)
             return
         }
 
+        mainViewModel.setAllSongs(songs)
         mainViewModel.setReservedPlaylist(created)
 
-        if(!songs.contains(mainViewModel.currentTrack.value?.song))  {
+        if (!songs.contains(mainViewModel.currentTrack.value?.song)) {
             val defaultTrack = songs[0]
 
             mainViewModel.setCurrentTrack(
@@ -271,6 +286,7 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == PermissionsService.READ_PERMISSION_CODE) {
             if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
                 setReservedPlaylist()
+                changeActivityState(MainActivityState.PLAY_MUSIC)
             } else {
                 Toast.makeText(this, "Songs cannot be loaded without permission", Toast.LENGTH_LONG)
                     .show()
@@ -299,6 +315,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun handleLoadPlaylistMenuClick() {
+        runBlocking {
+            if (mainViewModel.playlists.isEmpty()) {
+                setupPlaylistsFromDb()
+            }
+        }
+
         val items = mainViewModel.playlists.map { it.name }.toTypedArray()
 
         AlertDialog.Builder(this@MainActivity)
@@ -306,17 +328,21 @@ class MainActivity : AppCompatActivity() {
             .setItems(items, { dialog, idx ->
                 val playlistPressedTo = mainViewModel.playlists[idx]
 
+                if (mainViewModel.songs.isEmpty()) {
+                    setReservedPlaylist()
+                }
+
                 if (activityState == MainActivityState.ADD_PLAYLIST) {
                     updateSelectableSongListAdapter(playlistPressedTo)
                 } else {
                     mainViewModel.updateCurrentPlaylist(playlistPressedTo)
 
                     if (mainViewModel.currentTrack.value == null
-                        || !mainViewModel.currentPlaylist?.songs.orEmpty().contains(
+                        || !mainViewModel.currentPlaylistSongs.contains(
                             mainViewModel.currentTrack.value?.song
                         )
                     ) {
-                        val defaultSong = mainViewModel.currentPlaylist!!.songs[0]
+                        val defaultSong = mainViewModel.currentPlaylistSongs[0]
                         mainViewModel.setCurrentTrack(
                             TrackModel(
                                 song = defaultSong,

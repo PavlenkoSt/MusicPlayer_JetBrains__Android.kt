@@ -59,26 +59,24 @@ class SongListSelectableAdapter(
             viewHolder.selectedCheckbox.isChecked = false
         }
 
-        viewHolder.selectedCheckbox.setOnCheckedChangeListener { btn, checked ->
-            if (checked) {
-                selectedTrackIds.add(id)
-                viewHolder.itemView.setBackgroundColor(Color.LTGRAY)
-            } else {
-                selectedTrackIds.remove(id)
-                viewHolder.itemView.setBackgroundColor(Color.WHITE)
-            }
+        viewHolder.selectedCheckbox.setOnClickListener {
+            onItemClick(id, viewHolder)
         }
 
         viewHolder.itemView.setOnClickListener {
-            if (selectedTrackIds.contains(id)) {
-                selectedTrackIds.remove(id)
-                viewHolder.itemView.setBackgroundColor(Color.WHITE)
-                viewHolder.selectedCheckbox.isChecked = false
-            } else {
-                selectedTrackIds.add(id)
-                viewHolder.itemView.setBackgroundColor(Color.LTGRAY)
-                viewHolder.selectedCheckbox.isChecked = true
-            }
+            onItemClick(id, viewHolder)
+        }
+    }
+
+    private fun onItemClick (id: Long,viewHolder: ViewHolder) {
+        if (selectedTrackIds.contains(id)) {
+            selectedTrackIds.remove(id)
+            viewHolder.itemView.setBackgroundColor(Color.WHITE)
+            viewHolder.selectedCheckbox.isChecked = false
+        } else {
+            selectedTrackIds.add(id)
+            viewHolder.itemView.setBackgroundColor(Color.LTGRAY)
+            viewHolder.selectedCheckbox.isChecked = true
         }
     }
 
